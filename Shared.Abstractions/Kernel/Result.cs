@@ -100,6 +100,13 @@ public class Result
     {
         return new Result(failureReasons);
     }
+
+    /// <summary>
+    /// Implicitly convert a result to a <see cref="Task{Result}"/>
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static implicit operator Task<Result>(Result result) => Task.FromResult(result);
 }
 
 /// <summary>
@@ -237,4 +244,11 @@ public class Result<TResult> : Result
     
         return new Result<TMapped>(FailureReasons!);
     }
+
+    /// <summary>
+    /// Implicitly convert a result to a <see cref="Task{Result}"/>
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static implicit operator Task<Result<TResult>>(Result<TResult> result) => Task.FromResult(result);
 }
