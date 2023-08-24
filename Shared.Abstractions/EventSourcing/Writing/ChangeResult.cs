@@ -1,3 +1,5 @@
+using Shared.Abstractions.Kernel;
+
 #pragma warning disable CS0108, CS0114
 namespace Shared.Abstractions.EventSourcing.Writing;
 

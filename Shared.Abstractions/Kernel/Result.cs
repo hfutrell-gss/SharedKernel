@@ -1,4 +1,4 @@
-﻿namespace Shared.Abstractions.EventSourcing.Writing;
+﻿namespace Shared.Abstractions.Kernel;
 
 
 /// <summary>
@@ -63,6 +63,17 @@ public class Result
     /// Fail with the exception thrown and a list of failure reasons
     /// </summary>
     /// <param name="ex"></param>
+    /// <param name="failureReason"></param>
+    /// <returns></returns>
+    public static Result Fail(Exception ex, string failureReason)
+    {
+        return new Result(ex, new[] { failureReason });
+    }
+
+    /// <summary>
+    /// Fail with the exception thrown and a list of failure reasons
+    /// </summary>
+    /// <param name="ex"></param>
     /// <param name="failureReasons"></param>
     /// <returns></returns>
     public static Result Fail(Exception ex, IEnumerable<string> failureReasons)
@@ -70,6 +81,16 @@ public class Result
         return new Result(ex, failureReasons);
     }
 
+    /// <summary>
+    /// Fail with a list of failure reasons
+    /// </summary>
+    /// <param name="failureReason"></param>
+    /// <returns></returns>
+    public static Result Fail(string failureReason)
+    {
+        return new Result(new[] { failureReason });
+    }
+    
     /// <summary>
     /// Fail with a list of failure reasons
     /// </summary>
@@ -130,6 +151,47 @@ public class Result<TResult> : Result
         return new Result<TResult>(result);
     }
 
+    /// <summary>
+    /// Fail with the exception thrown and a list of failure reasons
+    /// </summary>
+    /// <param name="ex"></param>
+    /// <param name="failureReason"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(Exception ex, string failureReason)
+    {
+        return new Result<TResult>(ex, new[] { failureReason });
+    }
+    
+    /// <summary>
+    /// Fail with the exception thrown and a list of failure reasons
+    /// </summary>
+    /// <param name="ex"></param>
+    /// <param name="failureReasons"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(Exception ex, IEnumerable<string> failureReasons)
+    {
+        return new Result<TResult>(ex, failureReasons.Append(ex.Message));
+    }
+    
+    /// <summary>
+    /// Fail with a list of failure reasons
+    /// </summary>
+    /// <param name="failureReason"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(string failureReason)
+    {
+        return new Result<TResult>(new[] { failureReason });
+    }
+        
+    /// <summary>
+    /// Fail with a list of failure reasons
+    /// </summary>
+    /// <param name="failureReasons"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(IEnumerable<string> failureReasons)
+    {
+        return new Result<TResult>(failureReasons);
+    }
     /// <summary>
     /// Chains functions on <see cref="Result{TResult}"/>
     /// </summary>
