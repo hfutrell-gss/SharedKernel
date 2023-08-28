@@ -34,7 +34,7 @@ public class Orchard : EventSourcedAggregateRoot<Orchard, OrchardId>
 
     public ChangeResult<Orchard> AddTree(string treeType)
     {
-        if ("invalid".Equals(treeType)) return Failure("tree type cannot be invalid");
+        if ("invalid".Equals(treeType)) return Fail("tree type cannot be invalid");
         
         var e = new TreeAddedEvent(Id, new TreeId(Guid.NewGuid()), treeType);
         

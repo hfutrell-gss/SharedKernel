@@ -164,9 +164,9 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// </summary>
     /// <param name="invalidation"></param>
     /// <returns></returns>
-    protected ChangeResult<TRoot> Failure(string invalidation)
+    protected ChangeResult<TRoot> Fail(string invalidation)
     {
-        return Failure(new []{invalidation});
+        return Fail(new []{invalidation});
     }      
      
     /// <summary>
@@ -174,7 +174,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// </summary>
     /// <param name="invalidations"></param>
     /// <returns></returns>
-    protected ChangeResult<TRoot> Failure(IEnumerable<string> invalidations)
+    protected ChangeResult<TRoot> Fail(IEnumerable<string> invalidations)
     {
         return ChangeResult<TRoot>.Fail(invalidations);
     }      

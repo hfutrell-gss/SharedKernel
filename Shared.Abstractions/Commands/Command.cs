@@ -11,4 +11,4 @@ public abstract record Command : IRequest<CommandResult>;
 /// Command for CQRS that returns a specific result type
 /// </summary>
 /// <typeparam name="TResult"></typeparam>
-public abstract record Command<TResult> : IRequest<TResult> where TResult : CommandResult;
+public abstract record Command<TResult> : IRequest<CommandResult<TResult>>;

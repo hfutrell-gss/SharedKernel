@@ -7,7 +7,7 @@ namespace Shared.Abstractions.EventSourcing.Writing;
 /// The result of a change operation on an aggregate
 /// </summary>
 /// <typeparam name="TResult"></typeparam>
-public sealed class ChangeResult<TResult> : Result<TResult>
+public sealed record ChangeResult<TResult> : Result<TResult>
 {
     private ChangeResult(TResult resultValue) : base(resultValue)
     {

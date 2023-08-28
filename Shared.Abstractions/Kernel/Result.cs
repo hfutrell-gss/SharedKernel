@@ -1,10 +1,11 @@
-﻿namespace Shared.Abstractions.Kernel;
+﻿#pragma warning disable CS0108, CS0114
+namespace Shared.Abstractions.Kernel;
 
 
 /// <summary>
 /// A basic result type that reports success or invalidation reasons
 /// </summary>
-public class Result
+public record Result
 {
     /// <summary>
     /// True if the operation was successful
@@ -100,7 +101,51 @@ public class Result
     {
         return new Result(failureReasons);
     }
-
+    
+    /// <summary>
+    /// Chains functions on <see cref="Result{TResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <returns><see cref="Result"/></returns>
+    public Result Bind(Func<Result> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return f();
+            }
+            catch (Exception ex)
+            {
+                return Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
+            }
+        }
+        
+        return Fail(FailureReasons!);
+    }
+     
+    /// <summary>
+    /// Chains functions on <see cref="Result{TResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <returns><see cref="Result"/></returns>
+    public Result<TResult> Bind<TResult>(Func<Result<TResult>> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return f();
+            }
+            catch (Exception ex)
+            {
+                return Result<TResult>.Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
+            }
+        }
+            
+        return Result<TResult>.Fail(FailureReasons!);
+    }
+     
     /// <summary>
     /// Implicitly convert a result to a <see cref="Task{Result}"/>
     /// </summary>
@@ -113,7 +158,7 @@ public class Result
 /// A basic result that returns a value
 /// </summary>
 /// <typeparam name="TResult"></typeparam>
-public class Result<TResult> : Result
+public record Result<TResult> : Result
 {
     /// <summary>
     /// The result of the operation
@@ -199,6 +244,7 @@ public class Result<TResult> : Result
     {
         return new Result<TResult>(failureReasons);
     }
+    
     /// <summary>
     /// Chains functions on <see cref="Result{TResult}"/>
     /// </summary>
@@ -220,6 +266,28 @@ public class Result<TResult> : Result
         }
 
         return new Result<TMapped>(FailureReasons!);
+    }
+    
+    /// <summary>
+    /// Chains functions on <see cref="Result{TResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <returns><see cref="Result"/></returns>
+    public Result Bind(Func<TResult, Result> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return f(ResultValue!);
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
+            }
+        }
+    
+        return Result.Fail(FailureReasons!);
     }
     
     /// <summary>

@@ -20,7 +20,6 @@ public interface ICommandBus
     /// <typeparam name="TCommand"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     /// <returns>A specific type of <see cref="CommandResult"/></returns>
-     public Task<TResult> SendCommand<TCommand, TResult>(TCommand command) 
-         where TCommand : Command<TResult>
-          where TResult : CommandResult;
+    public Task<CommandResult<TResult>> SendCommand<TCommand, TResult>(TCommand command)
+        where TCommand : Command<TResult>;
 }

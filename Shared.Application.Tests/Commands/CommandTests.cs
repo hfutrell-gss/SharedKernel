@@ -30,12 +30,12 @@ public class CommandTests
         return await _commandBus.SendCommand(new SubtractValueCommand(1));
     }
 
-    private async Task<AddValueCommandResult> SendSuccessfulCommand()
+    private async Task<CommandResult<AddValueCommandResult>> SendSuccessfulCommand()
     {
         return await _commandBus.SendCommand<AddValueCommand, AddValueCommandResult>(new AddValueCommand(2));
     }
 
-    private async Task<AddValueCommandResult> SendFailedCommand()
+    private async Task<CommandResult<AddValueCommandResult>> SendFailedCommand()
     {
         return await _commandBus.SendCommand<AddValueCommand, AddValueCommandResult>(new AddValueCommand(1));
     }
@@ -44,49 +44,49 @@ public class CommandTests
     public async Task a_successful_command_has_success_status()
     {
         var result = await SendSuccessfulCommand();
-        Assert.Equal(ResultStatus.Success, result.Status);
+        Assert.True(result.WasSuccessful);
     }
     
     [Fact]
     public async Task a_successful_command_with_a_value_has_a_value()
     {
         var result = await SendSuccessfulCommand();
-        Assert.NotEqual(0, result.ResultValue);
+        Assert.NotEqual(0, result.ResultValue.I);
     }
      
     [Fact]
     public async Task a_failed_command_shows_failed()
     {
         var result = await SendFailedCommand();
-        Assert.Equal(ResultStatus.Failed, result.Status);
+        Assert.False(result.WasSuccessful);
     }
     
     [Fact]
     public async Task a_failed_command_has_errors()
     {
         var result = await SendFailedCommand();
-        Assert.NotEmpty(result.Errors);
+        Assert.NotEmpty(result.FailureReasons);
     }
     
     [Fact]
     public async Task base_result_has_success()
     {
         var result = await SendSuccessfulCommandReturningBaseResult();
-        Assert.Equal(ResultStatus.Success, result.Status);
+        Assert.True(result.WasSuccessful);
     }
     
     [Fact]
     public async Task base_result_has_failure()
     {
         var result = await SendFailedCommandReturningBaseResult();
-        Assert.Equal(ResultStatus.Failed, result.Status);
+        Assert.False(result.WasSuccessful);
     }
     
     [Fact]
     public async Task base_result_has_error_message()
     {
         var result = await SendFailedCommandReturningBaseResult();
-        Assert.NotEmpty(result.Errors);
+        Assert.NotEmpty(result.FailureReasons);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class CommandTests
     {
         var result = CommandResult.Success();
         
-        Assert.Equal(ResultStatus.Success, result.Status);
+        Assert.True(result.WasSuccessful);
     }
     
     [Fact]
@@ -102,31 +102,31 @@ public class CommandTests
     {
         var result = CommandResult.Success();
             
-        Assert.Null(result.Errors);
+        Assert.Null(result.FailureReasons);
     }
      
     [Fact]
     public void a_failed_result_has_failed_status()
     {
-        var result = CommandResult.Failure("ruh roh");
+        var result = CommandResult.Fail("ruh roh");
             
-        Assert.Equal(ResultStatus.Failed, result.Status);
+        Assert.False(result.WasSuccessful);
     }
     
     [Fact]
     public void a_failed_results_messages_can_be_read()
     {
-        var result = CommandResult.Failure("ruh roh");
+        var result = CommandResult.Fail("ruh roh");
                 
-        Assert.Contains("ruh roh", result.Errors!);
+        Assert.Contains("ruh roh", result.FailureReasons!);
     }
     
     [Fact]
     public void a_failed_result_can_have_many_messages()
     {
-        var result = CommandResult.Failure(new [] {"ruh roh", "this not good"});
+        var result = CommandResult.Fail(new [] {"ruh roh", "this not good"});
                     
-        Assert.Contains("ruh roh", result.Errors!);
-        Assert.Contains("this not good", result.Errors!);
+        Assert.Contains("ruh roh", result.FailureReasons!);
+        Assert.Contains("this not good", result.FailureReasons!);
     }
 }

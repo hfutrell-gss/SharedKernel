@@ -38,9 +38,8 @@ public class CommandBus : ICommandBus
     /// <typeparam name="TCommand"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     /// <returns></returns>
-    public async Task<TResult> SendCommand<TCommand, TResult>(TCommand command) 
+    public async Task<CommandResult<TResult>> SendCommand<TCommand, TResult>(TCommand command) 
         where TCommand : Command<TResult> 
-        where TResult : CommandResult
     {
         return await _mediator.Send(command).ConfigureAwait(false);
     }

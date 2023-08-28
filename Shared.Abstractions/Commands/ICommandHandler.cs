@@ -2,6 +2,10 @@ using MediatR;
 
 namespace Shared.Abstractions.Commands;
 
+/// <summary>
+/// Implement to handle the designated command type
+/// </summary>
+/// <typeparam name="TCommand"></typeparam>
 public interface ICommandHandler<in TCommand> 
     : IRequestHandler<TCommand, CommandResult>
     where TCommand : Command
@@ -9,10 +13,14 @@ public interface ICommandHandler<in TCommand>
     public Task<CommandResult> Handle(TCommand request, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Implement to handle the designated command type
+/// </summary>
+/// <typeparam name="TCommand"></typeparam>
+/// <typeparam name="TResult"></typeparam>
 public interface ICommandHandler<in TCommand, TResult> 
-    : IRequestHandler<TCommand, TResult>
-    where TCommand : Command<TResult>
-    where TResult : CommandResult
+    : IRequestHandler<TCommand, CommandResult<TResult>>
+    where TCommand : Command<TResult>, IRequest<CommandResult<TResult>>
 {
-    public Task<TResult> Handle(TCommand request, CancellationToken cancellationToken);
+    public Task<CommandResult<TResult>> Handle(TCommand request, CancellationToken cancellationToken);
 }

@@ -1,4 +1,11 @@
+using Shared.Abstractions.Kernel;
+
 namespace Shared.Abstractions.Commands;
+
+/// <summary>
+/// Marker interface for command result
+/// </summary>
+public interface ICommandResult {}
 
 /// <summary>
 /// The most basic result for a command.
@@ -6,120 +13,222 @@ namespace Shared.Abstractions.Commands;
 /// response of some kind that gives
 /// basic indication to how the command went.
 /// </summary>
-public record CommandResult
+public sealed record CommandResult : Result, ICommandResult
 {
     /// <summary>
-    /// The execution status of the result
+    /// Create a failed result
     /// </summary>
-    public ResultStatus Status { get; protected init; }
-    
-    /// <summary>
-    /// Any errors that occured during command execution
-    /// </summary>
-    public IEnumerable<string>? Errors { get; protected init; }
-
-    /// <summary>
-    /// Uses init stuff
-    /// </summary>
-    protected CommandResult()
+    /// <param name="failureReasons"></param>
+    private CommandResult(IEnumerable<string> failureReasons) : base(failureReasons)
     {
-        
+
+    }
+ 
+    /// <summary>
+    /// Create a failed result when an exception was thrown
+    /// </summary>
+    /// <param name="exception"></param>
+    /// <param name="failureReasons"></param>
+    private CommandResult(Exception exception, IEnumerable<string> failureReasons) : base(exception, failureReasons)
+    {
     }
 
-    private CommandResult(ResultStatus status)
+    private CommandResult() : base()
     {
-        Status = status;
-    }
-    
-    /// <summary>
-    /// Create the result from state
-    /// </summary>
-    /// <param name="status"></param>
-    /// <param name="errors"></param>
-    private CommandResult(ResultStatus status, IEnumerable<string> errors)
-    {
-        Status = status;
-        Errors = errors;
     }
 
-    /// <summary>
-    /// A command was successful
-    /// </summary>
-    /// <returns></returns>
     public static CommandResult Success()
     {
-        return new CommandResult(ResultStatus.Success);
+        return new CommandResult();
     }
-
+     
     /// <summary>
-    /// The command failed with an error
+    /// Fail with the exception thrown and a list of failure reasons
     /// </summary>
-    /// <param name="error"></param>
+    /// <param name="ex"></param>
+    /// <param name="failureReason"></param>
     /// <returns></returns>
-    public static CommandResult Failure(string error)
+    public static CommandResult Fail(Exception ex, string failureReason)
     {
-        return Failure(new[] { error });
+        return new CommandResult(ex, new[] { failureReason });
     }
     
     /// <summary>
-    /// The command failed with many errors
+    /// Fail with the exception thrown and a list of failure reasons
     /// </summary>
-    /// <param name="errors"></param>
+    /// <param name="ex"></param>
+    /// <param name="failureReasons"></param>
     /// <returns></returns>
-    public static CommandResult Failure(IEnumerable<string> errors)
+    public static CommandResult Fail(Exception ex, IEnumerable<string> failureReasons)
     {
-        return new CommandResult(ResultStatus.Failed, errors);
+        return new CommandResult(ex, failureReasons);
     }
-}
+    
+    /// <summary>
+    /// Fail with a list of failure reasons
+    /// </summary>
+    /// <param name="failureReason"></param>
+    /// <returns></returns>
+    public static CommandResult Fail(string failureReason)
+    {
+        return new CommandResult(new[] { failureReason });
+    }
+        
+    /// <summary>
+    /// Fail with a list of failure reasons
+    /// </summary>
+    /// <param name="failureReasons"></param>
+    /// <returns></returns>
+    public static CommandResult Fail(IEnumerable<string> failureReasons)
+    {
+        return new CommandResult(failureReasons);
+    }
+        
+    /// <summary>
+    /// Chains functions on <see cref="CommandResult{TCommandResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <returns><see cref="CommandResult"/></returns>
+    public CommandResult Bind(Func<CommandResult> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return f();
+            }
+            catch (Exception ex)
+            {
+                return Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
+            }
+        }
+            
+        return Fail(FailureReasons!);
+    }
+         
+    /// <summary>
+    /// Chains functions on <see cref="CommandResult{TCommandResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <returns><see cref="CommandResult"/></returns>
+    public CommandResult<TCommandResult> Bind<TCommandResult>(Func<CommandResult<TCommandResult>> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return f();
+            }
+            catch (Exception ex)
+            {
+                return CommandResult<TCommandResult>.Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
+            }
+        }
+                
+        return CommandResult<TCommandResult>.Fail(FailureReasons!);
+    }
+        
+    /// <summary>
+    /// Implicitly convert a result to a <see cref="Task{CommandResult}"/>
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static implicit operator Task<CommandResult>(CommandResult result) => Task.FromResult(result);
+};
 
 /// <summary>
 /// A result that carries a value.
 /// </summary>
-/// <typeparam name="TResult">Self referential for type reasons</typeparam>
-/// <typeparam name="TValue">The captured value to be transmitted</typeparam>
-public abstract record CommandResult<TResult, TValue> : CommandResult
-    where TResult : CommandResult<TResult, TValue>, new()
+/// <typeparam name="TResult">The captured value to be transmitted</typeparam>
+public sealed record CommandResult<TResult> : Result<TResult>, ICommandResult
 {
-    /// <summary>
-    /// The resulting value from execution
-    /// </summary>
-    public TValue? ResultValue { get; private init; }
-
-    /// <summary>
-    /// Create a default constructor
-    /// </summary>
-    protected CommandResult()
+    private CommandResult(TResult resultValue) : base(resultValue)
     {
     }
-
+ 
+    private CommandResult(IEnumerable<string> failureReasons) : base(failureReasons)
+    {
+    }
+     
+    private CommandResult(Exception exception, IEnumerable<string> failureReasons) : base(exception, failureReasons)
+    {
+    }
+ 
     /// <summary>
-    /// Command was successful and has the value
+    /// A successful operation with its result
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="result"></param>
     /// <returns></returns>
-    public static TResult Success(TValue value)
+    public static CommandResult<TResult> Success(TResult result)
     {
-        return new TResult { ResultValue = value, Status = ResultStatus.Success};
+        return new CommandResult<TResult>(result);
     }
-    
+     
     /// <summary>
-    /// The command failed with an error
+    /// Fail with a list of failure reasons
     /// </summary>
-    /// <param name="error"></param>
+    /// <param name="failureReason"></param>
     /// <returns></returns>
-    public new static TResult Failure(string error)
+    public static CommandResult<TResult> Fail(string failureReason)
     {
-        return new TResult { Errors = new[] { error }, Status = ResultStatus.Failed};
+        return new CommandResult<TResult>(new [] {failureReason});
     }
-        
+     
+    /// <summary>
+    /// Fail with a list of failure reasons
+    /// </summary>
+    /// <param name="failureReasons"></param>
+    /// <returns></returns>
+    public static CommandResult<TResult> Fail(IEnumerable<string> failureReasons)
+    {
+        return new CommandResult<TResult>(failureReasons);
+    }
+     
+    /// <summary>
+    /// Chains functions on <see cref="CommandResult{TResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <typeparam name="TMapped"></typeparam>
+    /// <returns><see cref="CommandResult{TResult}"/></returns>
+    public CommandResult<TMapped> Bind<TMapped>(Func<TResult, CommandResult<TMapped>> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return f(ResultValue!);
+            }
+            catch (Exception ex)
+            {
+                return new CommandResult<TMapped>(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
+            }
+        }
+     
+        return new CommandResult<TMapped>(FailureReasons!);
+    }
+         
+    /// <summary>
+    /// Chains functions on <see cref="CommandResult{TResult}"/>
+    /// </summary>
+    /// <param name="f"></param>
+    /// <typeparam name="TMapped"></typeparam>
+    /// <returns><see cref="CommandResult{TResult}"/></returns>
+    public CommandResult<TMapped> Map<TMapped>(Func<TResult, TMapped> f)
+    {
+        if (WasSuccessful)
+        {
+            try
+            {
+                return new CommandResult<TMapped>(f(ResultValue!));
+            }
+            catch (Exception ex)
+            {
+                return new CommandResult<TMapped>(ex, new [] {ex.Message, ex.InnerException?.Message ?? "no inner exception" });
+            }
+        }
+         
+        return new CommandResult<TMapped>(FailureReasons!);
+    }
 
-    /// <summary>
-    /// The command failed with many errors
-    /// </summary>
-    /// <param name="errors"></param>
-    /// <returns></returns>
-    public new static TResult Failure(IEnumerable<string> errors)
-    {
-        return new TResult { Errors = errors, Status = ResultStatus.Failed};
-    }
+    public static implicit operator CommandResult<TResult>(TResult result) => new(result);
 }
