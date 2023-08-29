@@ -1,5 +1,5 @@
 using Shared.Abstractions.EventSourcing.Writing;
-using Shared.Kernel.EventSourcing;
+using Shared.Kernel.TestHelpers;
 using Shared.Kernel.UnitTests.EventSourcing.TestDomain;
 using Xunit.Abstractions;
 
@@ -168,7 +168,7 @@ public class EventSourcingAggregateRootTests
         can_do_binding
         ()
     {
-        Assert.True(BindCreation().WasSuccessful);
+        BindCreation().AssertSuccessful();
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public class EventSourcingAggregateRootTests
         an_exception_in_binding_is_handled
         ()
     {
-        Assert.False(BindCreation().Bind(o => o.ThrowException()).WasSuccessful);
+        BindCreation().Map(o => o.ThrowException()).AssertFailure();
     }
     
     [Fact]
@@ -184,15 +184,15 @@ public class EventSourcingAggregateRootTests
         an_exception_in_binding_returns_the_message
         ()
     {
-        Assert.NotEmpty(BindCreation().Bind(o => o.ThrowException()).FailureReasons);
+        Assert.NotEmpty(BindCreation().Map(o => o.ThrowException()).ExpectFailureAndGet().FailureReasons);
     }
 
     [Fact]
     void
-        can_throw_the_exception_from_the_result_when_exception
+        exceptions_can_be_thrown
         ()
     {
-        Assert.ThrowsAsync<Exception>(() => throw BindCreation().Bind(o => o.ThrowException()).Exception);
+        Assert.ThrowsAsync<InvalidCastException>(() => throw BindCreation().Map(o => o.ThrowException()).ExpectFailureAndGet().Exception!);
     }
 
     [Fact]
@@ -200,10 +200,10 @@ public class EventSourcingAggregateRootTests
         can_do_mapping
         ()
     {
-        var orchard = BindCreation().ResultValue;
-        var result = BindCreation().Map(o => o.Name);
+        var orchard = BindCreation();
+        var result = BindCreation().FlatMap(o => o.Name);
         
-        Assert.Equal(orchard.Name, result.ResultValue);
+        Assert.Equal(orchard.ExpectSuccessAndGet().Name, result.ExpectSuccessAndGet());
     }
     
     [Fact]
@@ -211,9 +211,13 @@ public class EventSourcingAggregateRootTests
         exception_in_mapping_returns_exception_message
         ()
     {
-        var result = BindCreation().Map<string>(o => throw new Exception("Ruh roh"));
-            
-        Assert.Equal("Ruh roh", result.FailureReasons.First());
+        Assert.Equal("Ruh roh", 
+            BindCreation().Map(o =>
+                {
+                    throw new Exception("Ruh roh");
+                    return ChangeResult<string>.Success(o.Name);
+                })
+                .ExpectFailureAndGet().FailureReasons.First()); 
     }
 
     [Fact]
@@ -221,9 +225,8 @@ public class EventSourcingAggregateRootTests
         exception_in_mapping_is_not_successful
         ()
     {
-        var result = BindCreation().Map<string>(o => throw new Exception("Ruh roh"));
-            
-        Assert.False(result.WasSuccessful);
+        BindCreation()
+            .FlatMap<string>(o => throw new Exception("Ruh roh")).AssertFailure();
     }
 
     [Fact]
@@ -231,7 +234,7 @@ public class EventSourcingAggregateRootTests
         invalid_binding_works_without_exceptions
         ()
     {
-        Assert.False(InvalidBindCreation().WasSuccessful);
+        InvalidBindCreation().AssertFailure();
     }
 
     [Fact]
@@ -239,7 +242,7 @@ public class EventSourcingAggregateRootTests
         invalid_binding_reports_invalidations
         ()
     {
-        Assert.NotEmpty(InvalidBindCreation().FailureReasons);
+        Assert.NotEmpty(InvalidBindCreation().ExpectFailureAndGet().FailureReasons);
     }
 
     public EventSourcingAggregateRootTests(ITestOutputHelper testOutputHelper)
@@ -303,16 +306,21 @@ public class EventSourcingAggregateRootTests
     {
         return Orchard.Create()
             .AddTree("maple")
-            .Bind(o => o.AddTree("orange"))
-            .Bind(o => o.AddTree("apple"));
+            .Map(o => o.AddTree("orange"))
+            .Map(o => o.AddTree("apple"))
+            ;
     }
 
     private ChangeResult<Orchard> InvalidBindCreation()
     {
         return Orchard.Create()
             .AddTree("maple")
-            .Bind(o => o.AddTree("orange"))
-            .Bind(o => o.AddTree("invalid"));
+            .Map(o => o.AddTree("orange"))
+            .Map(o => o.AddTree("invalid"));
     }
 
+    public static void Fail(string reason)
+    {
+        Assert.True(false, reason);
+    }
 }

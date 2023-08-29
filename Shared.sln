@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Application", "Share
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Infrastructure.InMemory", "Shared.Infrastructure.InMemory\Shared.Infrastructure.InMemory.csproj", "{A0CEC8A6-248D-41FB-B5F7-91BB97BD0A89}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Kernel.XUnitHelpers", "Shared.Kernel.XUnitHelpers\Shared.Kernel.XUnitHelpers.csproj", "{9E54A076-6113-4A3D-900A-317B25F30382}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{A0CEC8A6-248D-41FB-B5F7-91BB97BD0A89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0CEC8A6-248D-41FB-B5F7-91BB97BD0A89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0CEC8A6-248D-41FB-B5F7-91BB97BD0A89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E54A076-6113-4A3D-900A-317B25F30382}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E54A076-6113-4A3D-900A-317B25F30382}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E54A076-6113-4A3D-900A-317B25F30382}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E54A076-6113-4A3D-900A-317B25F30382}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

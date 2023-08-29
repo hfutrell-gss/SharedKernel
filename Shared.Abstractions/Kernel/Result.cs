@@ -1,320 +1,77 @@
-﻿#pragma warning disable CS0108, CS0114
-namespace Shared.Abstractions.Kernel;
-
+﻿namespace Shared.Abstractions.Kernel;
 
 /// <summary>
 /// A basic result type that reports success or invalidation reasons
 /// </summary>
-public record Result
+public sealed record Result : Result<Unit>
 {
-    /// <summary>
-    /// True if the operation was successful
-    /// </summary>
-    public bool WasSuccessful { get; }
-
-    /// <summary>
-    /// A list of reasons that the operation was not successful
-    /// </summary>
-    public IEnumerable<string>? FailureReasons { get; }
-
-
-    /// <summary>
-    /// The exception if an exception was thrown
-    /// </summary>
-    public Exception? Exception { get; }
-
-    /// <summary>
-    /// A successful result
-    /// </summary>
-    protected Result()
+    private Result(Unit success) : base(success)
     {
-        WasSuccessful = true;
-    }
-
-    /// <summary>
-    /// Create a failed result
-    /// </summary>
-    /// <param name="failureReasons"></param>
-    protected Result(IEnumerable<string> failureReasons)
-    {
-        FailureReasons = failureReasons;
-        WasSuccessful = false;
-    }
-
-    /// <summary>
-    /// Create a failed result when an exception was thrown
-    /// </summary>
-    /// <param name="exception"></param>
-    /// <param name="invalidationReasons"></param>
-    protected Result(Exception exception, IEnumerable<string> invalidationReasons) : this(invalidationReasons)
-    {
-        Exception = exception;
-    }
-
-    /// <summary>
-    /// Report success
-    /// </summary>
-    /// <returns></returns>
-    public static Result Success()
-    {
-        return new Result();
-    }
-
-    /// <summary>
-    /// Fail with the exception thrown and a list of failure reasons
-    /// </summary>
-    /// <param name="ex"></param>
-    /// <param name="failureReason"></param>
-    /// <returns></returns>
-    public static Result Fail(Exception ex, string failureReason)
-    {
-        return new Result(ex, new[] { failureReason });
-    }
-
-    /// <summary>
-    /// Fail with the exception thrown and a list of failure reasons
-    /// </summary>
-    /// <param name="ex"></param>
-    /// <param name="failureReasons"></param>
-    /// <returns></returns>
-    public static Result Fail(Exception ex, IEnumerable<string> failureReasons)
-    {
-        return new Result(ex, failureReasons);
-    }
-
-    /// <summary>
-    /// Fail with a list of failure reasons
-    /// </summary>
-    /// <param name="failureReason"></param>
-    /// <returns></returns>
-    public static Result Fail(string failureReason)
-    {
-        return new Result(new[] { failureReason });
     }
     
-    /// <summary>
-    /// Fail with a list of failure reasons
-    /// </summary>
-    /// <param name="failureReasons"></param>
-    /// <returns></returns>
-    public static Result Fail(IEnumerable<string> failureReasons)
+    private Result(FailureDetails failure) : base(failure)
     {
-        return new Result(failureReasons);
     }
+
+    /// <summary>
+    /// Create success
+    /// </summary>
+    /// <returns></returns>
+    public static Result Success() => new(new Unit());
     
     /// <summary>
-    /// Chains functions on <see cref="Result{TResult}"/>
+    /// Create failure
     /// </summary>
-    /// <param name="f"></param>
-    /// <returns><see cref="Result"/></returns>
-    public Result Bind(Func<Result> f)
-    {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return f();
-            }
-            catch (Exception ex)
-            {
-                return Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
-            }
-        }
-        
-        return Fail(FailureReasons!);
-    }
-     
-    /// <summary>
-    /// Chains functions on <see cref="Result{TResult}"/>
-    /// </summary>
-    /// <param name="f"></param>
-    /// <returns><see cref="Result"/></returns>
-    public Result<TResult> Bind<TResult>(Func<Result<TResult>> f)
-    {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return f();
-            }
-            catch (Exception ex)
-            {
-                return Result<TResult>.Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
-            }
-        }
-            
-        return Result<TResult>.Fail(FailureReasons!);
-    }
-     
-    /// <summary>
-    /// Implicitly convert a result to a <see cref="Task{Result}"/>
-    /// </summary>
-    /// <param name="result"></param>
+    /// <param name="failureDetails"></param>
     /// <returns></returns>
-    public static implicit operator Task<Result>(Result result) => Task.FromResult(result);
+    public static Result Fail(params string[] failureDetails) => new(FailureDetails.From(failureDetails));
 }
 
 /// <summary>
 /// A basic result that returns a value
 /// </summary>
 /// <typeparam name="TResult"></typeparam>
-public record Result<TResult> : Result
+public record Result<TResult> : ResultBase<TResult>
 {
     /// <summary>
-    /// The result of the operation
+    /// Create a new success
     /// </summary>
-    public TResult? ResultValue { get; }
-
-    /// <summary>
-    /// Create a successful result
-    /// </summary>
-    /// <param name="resultValue"></param>
-    protected Result(TResult resultValue)
+    /// <param name="success"></param>
+    protected internal Result(TResult success) : base(success)
     {
-        ResultValue = resultValue;
-    }
-    
-    /// <summary>
-    /// Create a failed result
-    /// </summary>
-    /// <param name="failureReasons"></param>
-    protected Result(IEnumerable<string> failureReasons) : base(failureReasons)
-    {
-
-    }
-        
-    /// <summary>
-    /// Create a failed result when an exception was thrown
-    /// </summary>
-    /// <param name="exception"></param>
-    /// <param name="invalidationReasons"></param>
-    protected Result(Exception exception, IEnumerable<string> invalidationReasons) : base(exception, invalidationReasons)
-    {
-
     }
 
     /// <summary>
-    /// Succeed with the result of the operation
+    /// Create a new failure
+    /// </summary>
+    /// <param name="details"></param>
+    protected internal Result(FailureDetails details) : base(details)
+    {
+    }
+
+    /// <summary>
+    /// Create success
     /// </summary>
     /// <param name="result"></param>
     /// <returns></returns>
-    public static Result<TResult> Success(TResult result)
-    {
-        return new Result<TResult>(result);
-    }
+    public static Result<TResult> Success(TResult result) => new(result);
+    
+    /// <summary>
+    /// Create failure from reasons
+    /// </summary>
+    /// <param name="reasons"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(params string[] reasons) => new(FailureDetails.From(reasons));
+    
+    /// <summary>
+    /// Create failure from details
+    /// </summary>
+    /// <param name="details"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(FailureDetails details) => new(details);
 
     /// <summary>
-    /// Fail with the exception thrown and a list of failure reasons
-    /// </summary>
-    /// <param name="ex"></param>
-    /// <param name="failureReason"></param>
-    /// <returns></returns>
-    public static Result<TResult> Fail(Exception ex, string failureReason)
-    {
-        return new Result<TResult>(ex, new[] { failureReason });
-    }
-    
-    /// <summary>
-    /// Fail with the exception thrown and a list of failure reasons
-    /// </summary>
-    /// <param name="ex"></param>
-    /// <param name="failureReasons"></param>
-    /// <returns></returns>
-    public static Result<TResult> Fail(Exception ex, IEnumerable<string> failureReasons)
-    {
-        return new Result<TResult>(ex, failureReasons.Append(ex.Message));
-    }
-    
-    /// <summary>
-    /// Fail with a list of failure reasons
-    /// </summary>
-    /// <param name="failureReason"></param>
-    /// <returns></returns>
-    public static Result<TResult> Fail(string failureReason)
-    {
-        return new Result<TResult>(new[] { failureReason });
-    }
-        
-    /// <summary>
-    /// Fail with a list of failure reasons
-    /// </summary>
-    /// <param name="failureReasons"></param>
-    /// <returns></returns>
-    public static Result<TResult> Fail(IEnumerable<string> failureReasons)
-    {
-        return new Result<TResult>(failureReasons);
-    }
-    
-    /// <summary>
-    /// Chains functions on <see cref="Result{TResult}"/>
-    /// </summary>
-    /// <param name="f"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <returns><see cref="Result{TResult}"/></returns>
-    public Result<TMapped> Bind<TMapped>(Func<TResult, Result<TMapped>> f)
-    {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return f(ResultValue!);
-            }
-            catch (Exception ex)
-            {
-                return new Result<TMapped>(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
-            }
-        }
-
-        return new Result<TMapped>(FailureReasons!);
-    }
-    
-    /// <summary>
-    /// Chains functions on <see cref="Result{TResult}"/>
-    /// </summary>
-    /// <param name="f"></param>
-    /// <returns><see cref="Result"/></returns>
-    public Result Bind(Func<TResult, Result> f)
-    {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return f(ResultValue!);
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
-            }
-        }
-    
-        return Result.Fail(FailureReasons!);
-    }
-    
-    /// <summary>
-    /// Chains functions on <see cref="Result{TResult}"/>
-    /// </summary>
-    /// <param name="f"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <returns><see cref="Result{TResult}"/></returns>
-    public Result<TMapped> Map<TMapped>(Func<TResult, TMapped> f)
-    {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return new Result<TMapped>(f(ResultValue!));
-            }
-            catch (Exception ex)
-            {
-                return new Result<TMapped>(ex, new [] {ex.Message, ex.InnerException?.Message ?? "no inner exception" });
-            }
-        }
-    
-        return new Result<TMapped>(FailureReasons!);
-    }
-
-    /// <summary>
-    /// Implicitly convert a result to a <see cref="Task{Result}"/>
+    /// Implicitly cast to a task type
     /// </summary>
     /// <param name="result"></param>
     /// <returns></returns>

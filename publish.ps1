@@ -109,24 +109,31 @@ foreach ($project in $selectedProjects) {
         $publishVersion = $latestVersion + "-$timeStamp-beta"
     }
 
-    if ($currentVersion -ne $latestVersion) {
-        # Update the version in the .csproj file
-        #$xml.Project.PropertyGroup.Version = [string]$latestVersion
-        #$xml.Save($project.FullName)
-        #Write-Host "Updated version for $($project.FullName) from $currentVersion to $latestVersion"
+    $content = Get-Content -Path $project.FullName -Raw
+
+    # Check if the Version tag exists
+    if ($content -match '<Version>(.*?)<\/Version>') {
+        # Replace the version
+        $content = $content -replace '<Version>(.*?)<\/Version>', "<Version>$newVersion</Version>"
+    } else {
+        # If the Version tag doesn't exist, add it (you can modify where to insert it if needed)
+        $content = $content -replace '<PropertyGroup>', "<PropertyGroup>`r`n<Version>$newVersion</Version>"
     }
+
+    # Write the updated content back to the .csproj file
+    Set-Content -Path $project.FullName -Value $content
+
+    Write-Output "Version set to $newVersion" 
 
     # Build the project in release configuration
     Write-Host "Building the project..."
-    dotnet build --configuration Release --p:Version=$publishVersion 
+    dotnet build --configuration Release
     Write-Host ""
-    #msbuild.exe /t:Build /p:Configuration=Release /v:$publishVersion /p:Platform="Any CPU" $project.FullName
 
     # Pack the project
     Write-Host "Packing the project..."
-    dotnet pack --configuration Release --p:Version=$publishVersion
+    dotnet pack --configuration Release
     Write-Host ""
-    #msbuild.exe /t:pack /p:Configuration=Release /p:PackageOutputPath="$projectsDir\output" $project.FullName
 
     # Push the package to the local NuGet server
     Write-Host ""

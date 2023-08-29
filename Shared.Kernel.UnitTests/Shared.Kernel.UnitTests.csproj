@@ -28,6 +28,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Shared.Abstractions\Shared.Abstractions.csproj" />
       <ProjectReference Include="..\Shared.Application\Shared.Application.csproj" />
+      <ProjectReference Include="..\Shared.Kernel.XUnitHelpers\Shared.Kernel.XUnitHelpers.csproj" />
       <ProjectReference Include="..\Shared.Kernel\Shared.Kernel.csproj" />
     </ItemGroup>
 

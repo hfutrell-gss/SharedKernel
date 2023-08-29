@@ -162,23 +162,13 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// <summary>
     /// Report a failed change and the reasons for failure
     /// </summary>
-    /// <param name="invalidation"></param>
+    /// <param name="failureReasons"></param>
     /// <returns></returns>
-    protected ChangeResult<TRoot> Fail(string invalidation)
+    protected ChangeResult<TRoot> Fail(params string[] failureReasons)
     {
-        return Fail(new []{invalidation});
+        return ChangeResult<TRoot>.Fail(failureReasons);
     }      
      
-    /// <summary>
-    /// Report a failed change and the reasons for failure
-    /// </summary>
-    /// <param name="invalidations"></param>
-    /// <returns></returns>
-    protected ChangeResult<TRoot> Fail(IEnumerable<string> invalidations)
-    {
-        return ChangeResult<TRoot>.Fail(invalidations);
-    }      
-    
     /// <summary>
     /// Perform a new change based on the event type. Done prior to processing
     /// updates
@@ -187,20 +177,18 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// <typeparam name="TChangeEvent">The <see cref="Type"/> of the <see cref="ChangeEvent"/></typeparam>
     protected ChangeResult<TRoot> TryDoChange<TChangeEvent>(TChangeEvent @event) where TChangeEvent : ChangeEvent
     {
-        var result = ApplyChange(@event);
+        return ApplyChange(@event).Match(
+            onSuccess: root =>
+            {
+                _currentEventSequenceNumber += 1;
 
-        if (!result.WasSuccessful)
-        {
-            return result;
-        }
-         
-        _currentEventSequenceNumber += 1;
-        
-        @event.SetSequence(_currentEventSequenceNumber);
-        
-        RegisterDomainEvent(@event);
+                @event.SetSequence(_currentEventSequenceNumber);
 
-        return result;
+                RegisterDomainEvent(@event);
+
+                return ChangeResult<TRoot>.Success(root);
+            },
+            onFailure: failure => ChangeResult<TRoot>.Fail(failure));
     }
 
            

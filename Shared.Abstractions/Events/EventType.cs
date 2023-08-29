@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace Shared.Abstractions.Events;
@@ -8,26 +7,12 @@ namespace Shared.Abstractions.Events;
 /// </summary>
 public record EventType
 {
-    private static readonly int MaxLength = 50;
-    private static readonly Regex WhiteSpace = new("\\s");
-    private static readonly Regex NonWordCharacters = new("\\W");
-
     [JsonProperty]
     private string Value { get; }
 
     [JsonConstructor]
     private EventType(string value)
     {
-        if (string.IsNullOrEmpty(value)) throw new ArgumentException("Event types must have a value");
-        
-        if (value.Length > MaxLength) throw new ArgumentException($"Event types cannot be longer than {MaxLength} characters");
-        
-        if (WhiteSpace.IsMatch(value)) throw new ArgumentException("Event types cannot contain whitespace characters");
-        
-        if (NonWordCharacters.IsMatch(value)) throw new ArgumentException("Event types cannot contain non word characters");
-        
-        if (char.IsLower(value.First())) throw new ArgumentException("Event types must be pascal cased");
-        
         Value = value;
     }
 

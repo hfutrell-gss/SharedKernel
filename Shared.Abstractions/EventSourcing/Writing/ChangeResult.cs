@@ -1,89 +1,113 @@
+using Shared.Abstractions.Commands;
 using Shared.Abstractions.Kernel;
 
-#pragma warning disable CS0108, CS0114
 namespace Shared.Abstractions.EventSourcing.Writing;
+
 
 /// <summary>
 /// The result of a change operation on an aggregate
 /// </summary>
 /// <typeparam name="TResult"></typeparam>
-public sealed record ChangeResult<TResult> : Result<TResult>
+public sealed record ChangeResult<TResult> : ResultBase<TResult>
 {
-    private ChangeResult(TResult resultValue) : base(resultValue)
+    private ChangeResult(TResult success) : base(success)
     {
     }
 
-    private ChangeResult(IEnumerable<string> failureReasons) : base(failureReasons)
-    {
-    }
-    
-    private ChangeResult(Exception exception, IEnumerable<string> invalidationReasons) : base(exception, invalidationReasons)
+    private ChangeResult(FailureDetails failureDetails) : base(failureDetails)
     {
     }
 
     /// <summary>
-    /// A successful operation with its result
+    /// Create a successful change result
+    /// </summary>
+    /// <param name="success"></param>
+    /// <returns></returns>
+    public static ChangeResult<TResult> Success(TResult success) => new(success);
+    
+    /// <summary>
+    /// Create a failed change result
+    /// </summary>
+    /// <param name="reasons"></param>
+    /// <returns></returns>
+    public static ChangeResult<TResult> Fail(params string[] reasons) => new(FailureDetails.From(reasons));
+    
+    /// <summary>
+    /// Create a failed change result
+    /// </summary>
+    /// <param name="details"></param>
+    /// <returns></returns>
+    public static ChangeResult<TResult> Fail(FailureDetails details) => new(details);
+
+    /// <summary>
+    /// Map internal value and keep result structure
+    /// </summary>
+    /// <param name="mapping"></param>
+    /// <typeparam name="TMapped"></typeparam>
+    /// <returns></returns>
+    public ChangeResult<TMapped> FlatMap<TMapped>(Func<TResult, TMapped> mapping)
+    {
+        return FlatMapCore<ChangeResult<TMapped>, TMapped>(
+            mapping,
+            m => new ChangeResult<TMapped>(m),
+            ChangeResult<TMapped>.Fail);
+    }
+}
+
+/// <summary>
+/// Extensions to add mapping functionality to results
+/// </summary>
+public static class ResultMappingExtensions
+{
+    /// <summary>
+    /// Map internal value to new result type
     /// </summary>
     /// <param name="result"></param>
-    /// <returns></returns>
-    public static ChangeResult<TResult> Success(TResult result)
-    {
-        return new ChangeResult<TResult>(result);
-    }
-    
-    /// <summary>
-    /// Fail with a list of failure reasons
-    /// </summary>
-    /// <param name="invalidationReasons"></param>
-    /// <returns></returns>
-    public static ChangeResult<TResult> Fail(IEnumerable<string> invalidationReasons)
-    {
-        return new ChangeResult<TResult>(invalidationReasons);
-    }
-    
-    /// <summary>
-    /// Chains functions on <see cref="ChangeResult{TResult}"/>
-    /// </summary>
-    /// <param name="f"></param>
+    /// <param name="mapping"></param>
     /// <typeparam name="TMapped"></typeparam>
-    /// <returns><see cref="ChangeResult{TResult}"/></returns>
-    public ChangeResult<TMapped> Bind<TMapped>(Func<TResult, ChangeResult<TMapped>> f)
+    /// <typeparam name="TSuccess"></typeparam>
+    /// <returns></returns>
+    public static CommandResult<TMapped> Map<TSuccess, TMapped>(
+        this ResultBase<TSuccess> result,
+        Func<TSuccess, CommandResult<TMapped>> mapping)
     {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return f(ResultValue!);
-            }
-            catch (Exception ex)
-            {
-                return new ChangeResult<TMapped>(new[] {ex.Message, ex.InnerException?.Message ?? "no inner exception"});
-            }
-        }
+        return result.MapCore<CommandResult<TMapped>, TMapped>(
+            mapping,
+            CommandResult<TMapped>.Fail);
+    }
     
-        return new ChangeResult<TMapped>(FailureReasons!);
-    }
-        
     /// <summary>
-    /// Chains functions on <see cref="ChangeResult{TResult}"/>
+    /// Map internal value to new result type
     /// </summary>
-    /// <param name="f"></param>
+    /// <param name="result"></param>
+    /// <param name="mapping"></param>
     /// <typeparam name="TMapped"></typeparam>
-    /// <returns><see cref="ChangeResult{TResult}"/></returns>
-    public ChangeResult<TMapped> Map<TMapped>(Func<TResult, TMapped> f)
+    /// <typeparam name="TSuccess"></typeparam>
+    /// <returns></returns>
+    public static ChangeResult<TMapped> Map<TSuccess, TMapped>(
+        this ResultBase<TSuccess> result,
+        Func<TSuccess, ChangeResult<TMapped>> mapping)
     {
-        if (WasSuccessful)
-        {
-            try
-            {
-                return new ChangeResult<TMapped>(f(ResultValue!));
-            }
-            catch (Exception ex)
-            {
-                return new ChangeResult<TMapped>(ex, new [] {ex.Message, ex.InnerException?.Message ?? "no inner exception" });
-            }
-        }
-        
-        return new ChangeResult<TMapped>(FailureReasons!);
+        return result.MapCore<ChangeResult<TMapped>, TMapped>(
+            mapping,
+            ChangeResult<TMapped>.Fail);
     }
+
+    /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="mapping"></param>
+    /// <typeparam name="TMapped"></typeparam>
+    /// <typeparam name="TSuccess"></typeparam>
+    /// <returns></returns>
+    public static Result<TMapped> Map<TSuccess, TMapped>(
+        this ResultBase<TSuccess> result,
+        Func<TSuccess, Result<TMapped>> mapping)
+    {
+        return result.MapCore<Result<TMapped>, TMapped>(
+            mapping,
+            Result<TMapped>.Fail);
+    }
+          
 }

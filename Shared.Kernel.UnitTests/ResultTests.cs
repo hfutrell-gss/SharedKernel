@@ -1,7 +1,7 @@
-﻿using System.Reflection;
-using Shared.Abstractions.Commands;
+﻿using Shared.Abstractions.Commands;
 using Shared.Abstractions.EventSourcing.Writing;
 using Shared.Abstractions.Kernel;
+using Shared.Kernel.TestHelpers;
 
 namespace Shared.Kernel.UnitTests;
 
@@ -11,56 +11,110 @@ public class ResultTests
     public void PassesSuccessWhenResultOfTAndResult()
     {
         var x = Result<string>.Success("some")
-            .Bind(s => Result<int>.Success(s.Length))
-            .Bind(i => i == 4 ? Result.Success() : Result.Fail("No bueno"))
-            .Bind(Result.Success)
-            .Bind(() => Result<string>.Success("x"));
+            .Map(s => Result<int>.Success(s.Length)).Map(i => i == 4 ? Result.Success() : Result.Fail("No bueno"))
+            .Map(_ => Result.Success())
+            .Map(_ => Result<string>.Success("x"));
         
-        Assert.Equal("x", x.ResultValue);
+        Assert.Equal("x", x.ExpectSuccessAndGet());
     }
     
     [Fact]
     public void PassesFailure()
     {
         var x = Result<string>.Fail("some")
-            .Bind(s => Result<int>.Success(s.Length))
-            .Bind(i => i == 4 ? Result.Success() : Result.Fail("No bueno"))
-            .Bind(Result.Success)
-            .Bind(() => Result<string>.Success("x"));
+            .Map(s => Result<int?>.Success(s.Length))
+            .Map(i => i == 4 ? Result.Success() : Result.Fail("No bueno"))
+            .Map(_ => Result.Success())
+            .Map(_ => Result<string>.Success("x"));
             
-        Assert.Null(x.ResultValue);
-        Assert.Contains("some", x.FailureReasons);
+        x.AssertFailure();
+        Assert.Contains("some", x.ExpectFailureAndGet().FailureReasons);
     }
     
     [Fact]
-    public void CanDoManyResults()
+    public void CanChangeResultTypes()
     {
-        var x = Result<int>.Success(1)
-            .Bind(i => ChangeResult<int>.Success(i + 1))
-            .Bind(i => CommandResult<int>.Success(i + 2));
+        var x = ChangeResult<int>.Success(1)
+            .Map(i => Result<int>.Success(i + 1))
+            .Map(i => CommandResult<int>.Success(i + 1))
+            .Map(i => Result<int>.Success(i + 1))
+            .Map(i => ChangeResult<int>.Success(i + 1))
+            ;
                 
-        Assert.Equal(4, x.ResultValue);
+        Assert.Equal(5, x.ExpectSuccessAndGet());
     }
     
-        
     [Fact]
     public void CanDoManyResultsPermutation()
     {
         var x = ChangeResult<int>.Success(1)
-            .Bind(i => CommandResult<int>.Success(i + 1))
-            .Bind(i => Result<int>.Success(i + 2));
+            .Map(i => CommandResult<int>.Success(i + 1))
+            .Map(i => Result<int>.Success(i + 2));
                 
-        Assert.Equal(4, x.ResultValue);
+        Assert.Equal(4, x.ExpectSuccessAndGet());
     }
  
     [Fact]
     public void FailsThroughManyResults()
     {
         var x = Result<int>.Fail("bad")
-            .Bind(i => ChangeResult<int>.Success(i + 1))
-            .Bind(i => CommandResult<int>.Success(i + 2));
+            .Map(i => CommandResult<int>.Success(i + 2));
                     
-        Assert.False(x.WasSuccessful);
-        Assert.Contains("bad", x.FailureReasons);
+        x.AssertFailure();
+        Assert.Contains("bad", x.ExpectFailureAndGet().FailureReasons);
+    }
+    
+    [Fact]
+    public void BindResultToResult()
+    {
+        var x = Result.Success().Map(_ => Result.Success());
+        x.AssertSuccessful();
+    }
+    
+    [Fact]
+    public void CanFailForManyReasons()
+    {
+    
+        var x = Result.Success()
+            .Map(_ => Result.Fail(new[] {"no", "not good"}));
+        
+        x.AssertFailure();
+        
+        Assert.Equal(new[] {"no", "not good"}, x.ExpectFailureAndGet().FailureReasons);
+    }
+    
+    [Fact]
+    public void CapturesExceptionsInFailureBinding()
+    {
+        
+        var x = Result.Success().Map(_ =>
+        {
+            throw new Exception("bad bad not good");
+            return Result.Success();
+        });
+        
+        x.AssertFailure();
+        Assert.Contains("bad bad not good", x.ExpectFailureAndGet().FailureReasons);
+        Assert.NotNull(x.ExpectFailureAndGet().Exception);
+    }
+    
+    [Fact]
+    public void CanMapAResultOut()
+    {
+       
+        var x = Result<string>.Success("1")
+            .Map(i => Result<int>.Success(int.Parse(i)));
+        
+        x.AssertSuccessful();
+        Assert.Equal(1, x.ExpectSuccessAndGet());
+    }
+    
+    [Fact]
+    public void ImplicitlyCastsToATask()
+    {
+        // This shouldn't compile if broken so just assert success
+        Task<Result<string>> task = Result<string>.Success("1");
+            
+        Assert.True(true);
     }
 }
