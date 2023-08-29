@@ -6,9 +6,9 @@ if ($deployAsRelease -eq "") {
 }
 
 if ($deployAsRelease -ne 'major' -And $deployAsRelease -ne 'minor' -And $deployAsRelease -ne 'patch'-And $deployAsRelease -ne 'no') {
-        Write-Host "Invalid selection. Must be major/minor/patch/no"
-        exit
-    }
+    Write-Host "Invalid selection. Must be major/minor/patch/no"
+    exit
+}
 
 # Get all .csproj files from directory recursively
 $projectFiles = Get-ChildItem -Recurse -Filter *.csproj
@@ -44,13 +44,15 @@ $nugetServerUrl = "\\gss2k19cicd00\GSS-NuGet-Feed"
 # Current timestamp for beta releases
 $timestamp = Get-Date -Format "yyyyMMddHHmmss"
 
-foreach ($project in $selectedProjects) {
+foreach ($project in $selectedProjects)
+{
     Write-Host "Starting project $project"
     # Navigate to project directory
     Set-Location $project.DirectoryName
     $packageId = $xml.Project.PropertyGroup.PackageId
 
-    if ($packageId -eq $null) {
+    if ($packageId -eq $null)
+    {
         $packageId = $project.BaseName
     }
 
@@ -72,28 +74,34 @@ foreach ($project in $selectedProjects) {
     $versions = $versionFolders | ForEach-Object { $_.Name }
 
     # Get the latest version number (ignoring suffixes)
-    $latestVersion = $versions | ForEach-Object { $_ -split '-', 2 | Select-Object -First 1 } | Sort-Object {[Version]$_} | Select-Object -Last 1
+    $latestVersion = $versions | ForEach-Object { $_ -split '-', 2 | Select-Object -First 1 } | Sort-Object { [Version]$_ } | Select-Object -Last 1
 
     # If the latest version is $null, default to '1.0.0'
-    if ($latestVersion -eq $null) {
+    if ($latestVersion -eq $null)
+    {
         Write-Host "No versions found on the server. Defaulting to 1.0.0"
         $latestVersion = '1.0.0'
     }
 
     Write-Host "$latestVersion is latest"
-    
-    if ($deployAsRelease -eq 'patch') {
+
+    if ($deployAsRelease -eq 'patch')
+    {
         # Increment the minor version
         $versionParts = $latestVersion.Split('.')
         $versionParts[2] = ([int]$versionParts[2] + 1).ToString()
         $publishVersion = $versionParts -join '.'
-    }elseif ($deployAsRelease -eq 'minor') {
-         # Increment the minor version
+    }
+    elseif ($deployAsRelease -eq 'minor')
+    {
+        # Increment the minor version
         $versionParts = $latestVersion.Split('.')
         $versionParts[2] = (0).ToString()
         $versionParts[1] = ([int]$versionParts[1] + 1).ToString()
         $publishVersion = $versionParts -join '.'
-    }elseif ($deployAsRelease -eq 'major'){
+    }
+    elseif ($deployAsRelease -eq 'major')
+    {
         # Increment the minor version
         $versionParts = $latestVersion.Split('.')
         $versionParts[2] = (0).ToString()
@@ -101,42 +109,60 @@ foreach ($project in $selectedProjects) {
         $versionParts[0] = ([int]$versionParts[0] + 1).ToString()
         $publishVersion = $versionParts -join '.'
     }
-    
+
     # If user does not want to deploy as a release, prepend "beta" to the latest version
-    if ($deployAsRelease -eq 'no') {
+    if ($deployAsRelease -eq 'no')
+    {
         Write-Host "Not publishing a release version. Will append beta with timestamp to latest version number"
         Write-Host ""
         $publishVersion = $latestVersion + "-$timeStamp-beta"
     }
 
-    $content = Get-Content -Path $project.FullName -Raw
+    [xml]$xmlContent = Get-Content -Path $project.FullName -Raw
 
-    # Check if the Version tag exists
-    if ($content -match '<Version>(.*?)<\/Version>') {
-        # Replace the version
-        $content = $content -replace '<Version>(.*?)<\/Version>', "<Version>$newVersion</Version>"
-    } else {
-        # If the Version tag doesn't exist, add it (you can modify where to insert it if needed)
-        $content = $content -replace '<PropertyGroup>', "<PropertyGroup>`r`n<Version>$newVersion</Version>"
+    # Create namespace manager.
+    $nsManager = New-Object System.Xml.XmlNamespaceManager($xmlContent.NameTable)
+    $nsManager.AddNamespace("ns", $xmlContent.DocumentElement.NamespaceURI)
+
+    # Get the first PropertyGroup element.
+    $propertyGroup = $xmlContent.SelectSingleNode("/ns:Project/ns:PropertyGroup", $nsManager)
+
+    if ($propertyGroup -ne $null)
+    {
+        # Find the Version node.
+        $versionNode = $propertyGroup.SelectSingleNode("ns:Version", $nsManager)
+
+        if ($versionNode -ne $null)
+        {
+            $versionNode.'#text' = "$publishVersion"
+        }
+        else
+        {
+            # Create a new Version node.
+            $versionNode = $xmlContent.CreateElement("Version", $xmlContent.DocumentElement.NamespaceURI)
+            $versionNode.InnerText = $publishVersion
+            $propertyGroup.AppendChild($versionNode)
+        }
+
+        # Save the updated XML content back to the .csproj file.
+        $xmlContent.Save($project.FullName)
+
+
+        Write-Output "Version set to $publishVersion"
+
+        # Build the project in release configuration
+        Write-Host "Building the project..."
+        dotnet build --configuration Release
+        Write-Host ""
+
+        # Pack the project
+        Write-Host "Packing the project..."
+        dotnet pack --configuration Release
+        Write-Host ""
+
+        # Push the package to the local NuGet server
+        Write-Host ""
+        Write-Host "Publishing as $( $project.BaseName ).$publishVersion"
+        dotnet nuget push "$( $project.DirectoryName )\bin\Release\$( $project.BaseName ).$publishVersion.nupkg" --source $nugetServerUrl
     }
-
-    # Write the updated content back to the .csproj file
-    Set-Content -Path $project.FullName -Value $content
-
-    Write-Output "Version set to $newVersion" 
-
-    # Build the project in release configuration
-    Write-Host "Building the project..."
-    dotnet build --configuration Release
-    Write-Host ""
-
-    # Pack the project
-    Write-Host "Packing the project..."
-    dotnet pack --configuration Release
-    Write-Host ""
-
-    # Push the package to the local NuGet server
-    Write-Host ""
-    Write-Host "Publishing as $($project.BaseName).$publishVersion"
-    dotnet nuget push "$($project.DirectoryName)\bin\Release\$($project.BaseName).$publishVersion.nupkg" --source $nugetServerUrl
 }
