@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Shared.Abstractions.Events;
+using Shared.Abstractions.Kernel;
 
 namespace Shared.Abstractions.EventSourcing.Writing;
 

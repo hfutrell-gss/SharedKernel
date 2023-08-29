@@ -1,6 +1,3 @@
-
-using Shared.Abstractions.Events;
-
 namespace Shared.Abstractions.Kernel;
 
 /// <summary>

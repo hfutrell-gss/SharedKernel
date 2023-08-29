@@ -1,4 +1,6 @@
-﻿namespace Shared.Abstractions.Kernel;
+﻿#pragma warning disable CS0108, CS0114
+
+namespace Shared.Abstractions.Kernel;
 
 /// <summary>
 /// A basic result type that reports success or invalidation reasons
@@ -37,7 +39,7 @@ public record Result<TResult> : ResultBase<TResult>
     /// Create a new success
     /// </summary>
     /// <param name="success"></param>
-    protected internal Result(TResult success) : base(success)
+    protected Result(TResult success) : base(success)
     {
     }
 
@@ -45,7 +47,7 @@ public record Result<TResult> : ResultBase<TResult>
     /// Create a new failure
     /// </summary>
     /// <param name="details"></param>
-    protected internal Result(FailureDetails details) : base(details)
+    protected Result(FailureDetails details) : base(details)
     {
     }
 

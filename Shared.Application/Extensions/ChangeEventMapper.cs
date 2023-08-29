@@ -3,7 +3,7 @@ using Shared.Application.EventSourcing.Reading;
 
 namespace Shared.Application.Extensions;
 
-internal class ChangeEventMapper : IChangeEventTypeMap
+internal sealed class ChangeEventMapper : IChangeEventTypeMap
 {
     private readonly Dictionary<EventType, Type> _map = new();
     private readonly Dictionary<Type, EventType> _coMap = new();

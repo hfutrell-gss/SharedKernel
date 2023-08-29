@@ -113,8 +113,25 @@ public class ResultTests
     public void ImplicitlyCastsToATask()
     {
         // This shouldn't compile if broken so just assert success
-        Task<Result<string>> task = Result<string>.Success("1");
+        Task<Result<string>> task = Result<string>.Success("1")
+            .Match(
+                onSuccess: Result<string>.Success,
+                onFailure: Result<string>.Fail);
             
         Assert.True(true);
+    }
+    
+    [Fact]
+    public void CastsBetweenUnitAndTypesOfT()
+    {
+        // This shouldn't compile if broken so just assert success
+        var x = CommandResult<string>.Success("1")
+            .Map(_ => CommandResult.Success())
+            .Map(_ => Result.Success())
+            .Map(_ => Result<string>.Success("value"))
+            .Map(s => ChangeResult<string>.Success(s))
+            ;
+                
+        x.AssertSuccessful();
     }
 }

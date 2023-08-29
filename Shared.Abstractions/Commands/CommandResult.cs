@@ -31,30 +31,37 @@ public sealed record CommandResult : CommandResult<Unit>
 /// <typeparam name="TResult">The captured value to be transmitted</typeparam>
 public record CommandResult<TResult> : ResultBase<TResult>
 {
+    /// <summary>
+    /// Create a successful command result
+    /// </summary>
+    /// <param name="success"></param>
     protected CommandResult(TResult success) : base(success)
     {
     }
 
+    /// <summary>
+    /// Create a failed command result
+    /// </summary>
+    /// <param name="failure"></param>
     protected CommandResult(FailureDetails failure) : base(failure)
     {
     }
 
-    public static CommandResult<TResult> Success(TResult result) => new(result);
-    
-    public static CommandResult<TResult> Fail(params string[] reasons) => new(FailureDetails.From(reasons));
-    
-    public static CommandResult<TResult> Fail(FailureDetails failureDetails) => new(failureDetails);
-    
     /// <summary>
-    /// Map internal value to new result type
+    /// Create a successful command result
     /// </summary>
-    /// <param name="mapping"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <returns></returns>
-    public Result<TMapped> Map<TMapped>(Func<TResult, Result<TMapped>> mapping)
-    {
-        return MapCore<Result<TMapped>, TMapped>(
-            mapping,
-            Result<TMapped>.Fail);
-    }
+    /// <param name="result"></param>
+    public static CommandResult<TResult> Success(TResult result) => new(result);
+
+    /// <summary>
+    /// Create a failed command result
+    /// </summary>
+    /// <param name="reasons"></param>
+    public static CommandResult<TResult> Fail(params string[] reasons) => new(FailureDetails.From(reasons));
+
+    /// <summary>
+    /// Create a failed command result
+    /// </summary>
+    /// <param name="failureDetails"></param>
+    public static CommandResult<TResult> Fail(FailureDetails failureDetails) => new(failureDetails);
 }

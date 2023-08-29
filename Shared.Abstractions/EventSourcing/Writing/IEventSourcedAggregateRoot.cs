@@ -1,7 +1,6 @@
-using Shared.Abstractions.EventSourcing.Writing;
 using Shared.Abstractions.Kernel;
 
-namespace Shared.Abstractions.EventSourcing;
+namespace Shared.Abstractions.EventSourcing.Writing;
 
 /// <summary>
 /// An aggregate root that stores event sourcing specific events

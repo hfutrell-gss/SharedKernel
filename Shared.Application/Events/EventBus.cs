@@ -1,5 +1,6 @@
 using MediatR;
 using Shared.Abstractions.Events;
+using Shared.Abstractions.Kernel;
 
 namespace Shared.Application.Events;
 

@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Shared.Abstractions.Events;
+namespace Shared.Abstractions.Kernel;
 
 /// <summary>
 /// Marker interface to represent a domain event
