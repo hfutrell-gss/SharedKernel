@@ -34,24 +34,7 @@ public sealed record Result : Result<Unit>
     /// <param name="details"></param>
     /// <returns></returns>
     public static Result Fail(FailureDetails details) => new(details);
-    
-    /// <summary>
-    /// Map internal value to new result type
-    /// </summary>
-    /// <param name="result"></param>
-    /// <param name="mapping"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
-    /// <returns></returns>
-    public Result Map<TMapped>(
-        Func<Unit, Result> mapping)
-    {
-        return MapCore<Result, TMapped>(
-            mapping,
-            Fail);
-    }
- 
- 
+
 }
 
 /// <summary>
@@ -96,16 +79,14 @@ public record Result<TResult> : ResultBase<TResult>
     /// <param name="details"></param>
     /// <returns></returns>
     public static Result<TResult> Fail(FailureDetails details) => new(details);
-    
+
     /// <summary>
     /// Map internal value to new result type
     /// </summary>
-    /// <param name="result"></param>
     /// <param name="mapping"></param>
     /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
     /// <returns></returns>
-    public Result<TMapped> Map<TMapped>(
+    public Result<TMapped> Then<TMapped>(
         Func<TResult, Result<TMapped>> mapping)
     {
         return MapCore<Result<TMapped>, TMapped>(
@@ -116,12 +97,10 @@ public record Result<TResult> : ResultBase<TResult>
     /// <summary>
     /// Map internal value to new result type
     /// </summary>
-    /// <param name="result"></param>
     /// <param name="mapping"></param>
     /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
     /// <returns></returns>
-    public Result Map<TMapped>(
+    public Result Then<TMapped>(
         Func<TResult, Result> mapping)
     {
         return MapCore<Result, TMapped>(
@@ -132,12 +111,10 @@ public record Result<TResult> : ResultBase<TResult>
     /// <summary>
     /// Map internal value to new result type
     /// </summary>
-    /// <param name="result"></param>
     /// <param name="mapping"></param>
     /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
     /// <returns></returns>
-    public async Task<Result<TMapped>> Map<TMapped>(
+    public async Task<Result<TMapped>> Then<TMapped>(
         Func<TResult, Task<Result<TMapped>>> mapping)
     {
         return await MapCoreAsync<Result<TMapped>, TMapped>(
@@ -148,19 +125,29 @@ public record Result<TResult> : ResultBase<TResult>
     /// <summary>
     /// Map internal value to new result type
     /// </summary>
-    /// <param name="result"></param>
     /// <param name="mapping"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
     /// <returns></returns>
-    public async Task<Result> Map(
+    public async Task<Result> Then(
         Func<TResult, Task<Result>> mapping)
     {
         return await MapCoreAsync<Result, Unit>(
             mapping,
             f => Task.FromResult(Result.Fail(f)));
     }
-        
+    
+    /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="mapping"></param>
+    /// <returns></returns>
+    public Result Then(
+        Func<TResult, Result> mapping)
+    {
+        return MapCore<Result, Unit>(
+            mapping,
+            Result.Fail);
+    }       
+    
     /// <summary>
     /// Implicitly cast to a task type
     /// </summary>

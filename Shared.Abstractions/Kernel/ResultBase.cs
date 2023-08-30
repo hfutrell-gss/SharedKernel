@@ -47,7 +47,7 @@ public abstract record ResultBase<TSuccess>
     /// <param name="onSuccess"></param>
     /// <param name="onFailure"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public void Match(
+    public void Resolve(
         Action<TSuccess> onSuccess,
         Action<FailureDetails> onFailure
     )
@@ -61,7 +61,7 @@ public abstract record ResultBase<TSuccess>
     /// <param name="onSuccess"></param>
     /// <param name="onFailure"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public Task Match(
+    public Task Resolve(
         Func<TSuccess, Task> onSuccess,
         Func<FailureDetails, Task> onFailure
     )
@@ -77,7 +77,7 @@ public abstract record ResultBase<TSuccess>
     /// <typeparam name="TResult"></typeparam>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public TResult Match<TResult>(
+    public TResult Resolve<TResult>(
         Func<TSuccess, TResult> onSuccess,
         Func<FailureDetails, TResult> onFailure
     )
@@ -88,17 +88,17 @@ public abstract record ResultBase<TSuccess>
     /// <summary>
     /// Perform an operation on success or failure
     /// </summary>
-    /// <param name="onSuccess"></param>
-    /// <param name="onFailure"></param>
+    /// <param name="forSuccess"></param>
+    /// <param name="forFailure"></param>
     /// <typeparam name="TResult"></typeparam>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public Task<TResult> Match<TResult>(
-        Func<TSuccess, Task<TResult>> onSuccess,
-        Func<FailureDetails, Task<TResult>> onFailure
+    public Task<TResult> Resolve<TResult>(
+        Func<TSuccess, Task<TResult>> forSuccess,
+        Func<FailureDetails, Task<TResult>> forFailure
     )
     {
-        return DoAsync(onSuccess, onFailure);
+        return DoAsync(forSuccess, forFailure);
     }
 
     /// <summary>
@@ -133,16 +133,6 @@ public abstract record ResultBase<TSuccess>
         return DoAsync(mapping, fail);
     }
      
-    
-    protected TResult FlatMapCore<TResult, TMapped>(
-        Func<TSuccess, TMapped> mapping,
-        Func<TMapped, TResult> generator,
-        Func<FailureDetails, TResult> fail
-    )
-    {
-        return Do(s => generator(mapping(s)), fail);
-    }
-
     private void Do(Action<TSuccess> onSuccess, Action<FailureDetails> onFailure)
     {
         // Check failure first in case TSuccess is a value type

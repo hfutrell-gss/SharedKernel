@@ -177,7 +177,7 @@ public class EventSourcingAggregateRootTests
         an_exception_in_binding_is_handled
         ()
     {
-        BindCreation().Map(o => o.ThrowException()).AssertFailure();
+        BindCreation().Then(o => o.ThrowException()).AssertFailure();
     }
     
     [Fact]
@@ -185,7 +185,7 @@ public class EventSourcingAggregateRootTests
         an_exception_in_binding_returns_the_message
         ()
     {
-        Assert.NotEmpty(BindCreation().Map(o => o.ThrowException()).ExpectFailureAndGet().FailureReasons);
+        Assert.NotEmpty(BindCreation().Then(o => o.ThrowException()).ExpectFailureAndGet().FailureReasons);
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class EventSourcingAggregateRootTests
         exceptions_can_be_thrown
         ()
     {
-        Assert.ThrowsAsync<InvalidCastException>(() => throw BindCreation().Map(o => o.ThrowException()).ExpectFailureAndGet().Exception!);
+        Assert.ThrowsAsync<InvalidCastException>(() => throw BindCreation().Then(o => o.ThrowException()).ExpectFailureAndGet().Exception!);
     }
 
     [Fact]
@@ -202,7 +202,7 @@ public class EventSourcingAggregateRootTests
         ()
     {
         var orchard = BindCreation();
-        var result = BindCreation().Map(o => Result<string>.Success(o.Name!));
+        var result = BindCreation().Then(o => Result<string>.Success(o.Name!));
         
         Assert.Equal(orchard.ExpectSuccessAndGet().Name, result.ExpectSuccessAndGet());
     }
@@ -213,7 +213,7 @@ public class EventSourcingAggregateRootTests
         ()
     {
         Assert.Equal("Ruh roh", 
-            BindCreation().Map(o =>
+            BindCreation().Then(o =>
                 {
                     throw new Exception("Ruh roh");
                     return Result<string>.Success(o.Name);
@@ -227,7 +227,7 @@ public class EventSourcingAggregateRootTests
         ()
     {
         BindCreation()
-            .Map<string>(o =>
+            .Then<string>(o =>
             {
                 throw new Exception("Ruh roh");
                 return Result.Success();
@@ -311,8 +311,8 @@ public class EventSourcingAggregateRootTests
     {
         return Orchard.Create()
             .AddTree("maple")
-            .Map(o => o.AddTree("orange"))
-            .Map(o => o.AddTree("apple"))
+            .Then(o => o.AddTree("orange"))
+            .Then(o => o.AddTree("apple"))
             ;
     }
 
@@ -320,8 +320,8 @@ public class EventSourcingAggregateRootTests
     {
         return Orchard.Create()
             .AddTree("maple")
-            .Map(o => o.AddTree("orange"))
-            .Map(o => o.AddTree("invalid"));
+            .Then(o => o.AddTree("orange"))
+            .Then(o => o.AddTree("invalid"));
     }
 
     public static void Fail(string reason)
