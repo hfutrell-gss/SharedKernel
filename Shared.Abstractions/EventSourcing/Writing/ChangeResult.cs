@@ -1,4 +1,3 @@
-using Shared.Abstractions.Commands;
 using Shared.Abstractions.Kernel;
 
 namespace Shared.Abstractions.EventSourcing.Writing;
@@ -52,62 +51,4 @@ public sealed record ChangeResult<TResult> : ResultBase<TResult>
             m => new ChangeResult<TMapped>(m),
             ChangeResult<TMapped>.Fail);
     }
-}
-
-/// <summary>
-/// Extensions to add mapping functionality to results
-/// </summary>
-public static class ResultMappingExtensions
-{
-    /// <summary>
-    /// Map internal value to new result type
-    /// </summary>
-    /// <param name="result"></param>
-    /// <param name="mapping"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
-    /// <returns></returns>
-    public static CommandResult<TMapped> Map<TSuccess, TMapped>(
-        this ResultBase<TSuccess> result,
-        Func<TSuccess, CommandResult<TMapped>> mapping)
-    {
-        return result.MapCore<CommandResult<TMapped>, TMapped>(
-            mapping,
-            CommandResult<TMapped>.Fail);
-    }
-    
-    /// <summary>
-    /// Map internal value to new result type
-    /// </summary>
-    /// <param name="result"></param>
-    /// <param name="mapping"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
-    /// <returns></returns>
-    public static ChangeResult<TMapped> Map<TSuccess, TMapped>(
-        this ResultBase<TSuccess> result,
-        Func<TSuccess, ChangeResult<TMapped>> mapping)
-    {
-        return result.MapCore<ChangeResult<TMapped>, TMapped>(
-            mapping,
-            ChangeResult<TMapped>.Fail);
-    }
-
-    /// <summary>
-    /// Map internal value to new result type
-    /// </summary>
-    /// <param name="result"></param>
-    /// <param name="mapping"></param>
-    /// <typeparam name="TMapped"></typeparam>
-    /// <typeparam name="TSuccess"></typeparam>
-    /// <returns></returns>
-    public static Result<TMapped> Map<TSuccess, TMapped>(
-        this ResultBase<TSuccess> result,
-        Func<TSuccess, Result<TMapped>> mapping)
-    {
-        return result.MapCore<Result<TMapped>, TMapped>(
-            mapping,
-            Result<TMapped>.Fail);
-    }
-          
 }

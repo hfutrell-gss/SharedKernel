@@ -57,6 +57,20 @@ public abstract record ResultBase<TSuccess>
     }
     
     /// <summary>
+    /// Perform an action on success or failure
+    /// </summary>
+    /// <param name="onSuccess"></param>
+    /// <param name="onFailure"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public Task Match(
+        Func<TSuccess, Task> onSuccess,
+        Func<FailureDetails, Task> onFailure
+    )
+    {
+        return DoAsync(s => onSuccess(s), f => onFailure(f));
+    }
+     
+    /// <summary>
     /// Perform an operation on success or failure
     /// </summary>
     /// <param name="onSuccess"></param>
@@ -70,6 +84,22 @@ public abstract record ResultBase<TSuccess>
     )
     {
         return Do(onSuccess, onFailure);
+    }
+
+    /// <summary>
+    /// Perform an operation on success or failure
+    /// </summary>
+    /// <param name="onSuccess"></param>
+    /// <param name="onFailure"></param>
+    /// <typeparam name="TResult"></typeparam>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public Task<TResult> Match<TResult>(
+        Func<TSuccess, Task<TResult>> onSuccess,
+        Func<FailureDetails, Task<TResult>> onFailure
+    )
+    {
+        return DoAsync(onSuccess, onFailure);
     }
 
     /// <summary>
@@ -87,6 +117,23 @@ public abstract record ResultBase<TSuccess>
     {
         return Do(mapping, fail);
     }
+    
+    /// <summary>
+    /// Internal implementation of mapping
+    /// </summary>
+    /// <param name="mapping"></param>
+    /// <param name="fail"></param>
+    /// <typeparam name="TResult"></typeparam>
+    /// <typeparam name="TMapped"></typeparam>
+    /// <returns></returns>
+    protected internal Task<TResult> MapCoreAsync<TResult, TMapped>(
+        Func<TSuccess, Task<TResult>> mapping, 
+        Func<FailureDetails, Task<TResult>> fail
+    )
+    {
+        return DoAsync(mapping, fail);
+    }
+     
     
     protected TResult FlatMapCore<TResult, TMapped>(
         Func<TSuccess, TMapped> mapping,
@@ -118,7 +165,7 @@ public abstract record ResultBase<TSuccess>
     private TResult Do<TResult>(
         Func<TSuccess, TResult> s,
         Func<FailureDetails, TResult> f
-        )
+    )
     {
         // Check failure first in case TSuccess is a value type
         if (_failure is not null) return f(_failure);
@@ -135,6 +182,52 @@ public abstract record ResultBase<TSuccess>
             }
         }
         
+        throw new InvalidResultStateException();
+    }
+    
+    private Task DoAsync(
+        Func<TSuccess, Task> s,
+        Func<FailureDetails, Task> f
+    )
+    {
+        // Check failure first in case TSuccess is a value type
+        if (_failure is not null) return f(_failure);
+        
+        if (_success is not null)
+        {
+            try
+            {
+                return s(_success);
+            }
+            catch(Exception ex)
+            {
+                return f(FailureDetails.From(ex));
+            }
+        }
+                
+        throw new InvalidResultStateException();
+    }
+    
+    private Task<TResult> DoAsync<TResult>(
+        Func<TSuccess, Task<TResult>> s,
+        Func<FailureDetails, Task<TResult>> f
+    )
+    {
+        // Check failure first in case TSuccess is a value type
+        if (_failure is not null) return f(_failure);
+    
+        if (_success is not null)
+        {
+            try
+            {
+                return s(_success);
+            }
+            catch(Exception ex)
+            {
+                return f(FailureDetails.From(ex));
+            }
+        }
+            
         throw new InvalidResultStateException();
     }
 }

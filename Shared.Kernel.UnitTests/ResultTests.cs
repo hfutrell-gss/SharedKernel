@@ -1,4 +1,5 @@
-﻿using Shared.Abstractions.Commands;
+﻿using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine.Helpers;
+using Shared.Abstractions.Commands;
 using Shared.Abstractions.EventSourcing.Writing;
 using Shared.Abstractions.Kernel;
 using Shared.Kernel.TestHelpers;
@@ -133,5 +134,95 @@ public class ResultTests
             ;
                 
         x.AssertSuccessful();
+    }
+    
+    [Fact]
+    public async Task CanDoAsyncMatch()
+    {
+        var x = await CommandResult<string>.Success("1")
+                .Match(
+                    onSuccess: async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))),
+                    onFailure: async f => await Task.Run(() => Task.FromResult(Result<string>.Fail("bad bad not good"))))
+            ;
+
+        x.AssertSuccessful();
+    }
+    
+    [Fact]
+    public async Task CanDoAsyncMap()
+    {
+        var x = await CommandResult<string>.Success("1")
+                .Map(s => Task.FromResult(Result<string>.Success(s)))
+                .Map(async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))))
+            ;
+    
+        x.AssertSuccessful();
+    }
+    
+    [Fact]
+    public async Task CanDoAsyncMapFromResultTCommandResult()
+    {
+        var x = await CommandResult<string>.Success("1")
+                .Map(s => Task.FromResult(Result<string>.Success(s)))
+                .Map(async s => await Task.Run(() => Task.FromResult(CommandResult<string>.Success(s))))
+                .Map(s => Task.FromResult(Result<string>.Success("yay")))
+            ;
+        
+        x.AssertSuccessful();
+    }
+    
+    [Fact]
+    public async Task FailureWorksWithAsyncStuff()
+    {
+        var x = await CommandResult.Fail("nope")
+                .Map(_ => Task.FromResult(Result<int>.Success(2)))
+                .Map(async i => await Task.Run(() => Task.FromResult(CommandResult<string>.Success($"{i}"))))
+                .Map(s => Task.FromResult(Result<string>.Success("yay")))
+            ;
+            
+        Assert.Contains("nope", x.ExpectFailureAndGet().FailureReasons);
+    }
+    
+    [Fact]
+    public async Task CanDoMatchTask()
+    {
+        await CommandResult.Success()
+                .Match(
+                onSuccess: async _ => await Task.Run(() => Assert.True(true)),
+                onFailure: async _ => await Task.Run(() => Assert.Fail("bad bad not good")))
+            ;
+    }
+    
+    [Fact]
+    public async Task CanDoAsyncMapFromResultToResult()
+    {
+        var x = await CommandResult<string>.Success("1")
+                .Map(_ => Task.FromResult(Result.Success()))
+            ;
+
+        var y = await x.Map(_ => Task.FromResult(CommandResult.Success()));
+        
+            
+        x.AssertSuccessful();
+        y.AssertSuccessful();
+    }
+     
+    [Fact]
+    public async Task CanMapResultToCommandResult()
+    {
+         var x = (await DoThing())
+                .Map(async s => await DoOtherThing())
+            ;
+
+    }
+
+    private Task<Result<string>> DoThing()
+    {
+        return Task.FromResult(Result<string>.Success("k"));
+    }
+    
+    private Task<Result> DoOtherThing()
+    {
+        return Task.FromResult(Result.Success());
     }
 }

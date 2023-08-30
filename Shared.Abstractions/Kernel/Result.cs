@@ -27,6 +27,14 @@ public sealed record Result : Result<Unit>
     /// <param name="failureDetails"></param>
     /// <returns></returns>
     public static Result Fail(params string[] failureDetails) => new(FailureDetails.From(failureDetails));
+    
+    /// <summary>
+    /// Create failure from details
+    /// </summary>
+    /// <param name="details"></param>
+    /// <returns></returns>
+    public static Result Fail(FailureDetails details) => new(details);
+
 }
 
 /// <summary>
