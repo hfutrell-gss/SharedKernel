@@ -18,7 +18,6 @@ public class InvalidResultStateException : InvalidOperationException
 /// Base result object
 /// </summary>
 /// <typeparam name="TSuccess"></typeparam>
-/// <typeparam name="FailureDetails"></typeparam>
 public abstract record ResultBase<TSuccess>
 {
     private readonly TSuccess? _success;

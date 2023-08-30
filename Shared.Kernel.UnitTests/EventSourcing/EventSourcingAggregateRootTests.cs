@@ -1,4 +1,5 @@
 using Shared.Abstractions.EventSourcing.Writing;
+using Shared.Abstractions.Kernel;
 using Shared.Kernel.TestHelpers;
 using Shared.Kernel.UnitTests.EventSourcing.TestDomain;
 using Xunit.Abstractions;
@@ -201,7 +202,7 @@ public class EventSourcingAggregateRootTests
         ()
     {
         var orchard = BindCreation();
-        var result = BindCreation().FlatMap(o => o.Name);
+        var result = BindCreation().Map(o => Result<string>.Success(o.Name!));
         
         Assert.Equal(orchard.ExpectSuccessAndGet().Name, result.ExpectSuccessAndGet());
     }
@@ -215,7 +216,7 @@ public class EventSourcingAggregateRootTests
             BindCreation().Map(o =>
                 {
                     throw new Exception("Ruh roh");
-                    return ChangeResult<string>.Success(o.Name);
+                    return Result<string>.Success(o.Name);
                 })
                 .ExpectFailureAndGet().FailureReasons.First()); 
     }
@@ -226,7 +227,11 @@ public class EventSourcingAggregateRootTests
         ()
     {
         BindCreation()
-            .FlatMap<string>(o => throw new Exception("Ruh roh")).AssertFailure();
+            .Map<string>(o =>
+            {
+                throw new Exception("Ruh roh");
+                return Result.Success();
+            }).AssertFailure();
     }
 
     [Fact]
@@ -302,7 +307,7 @@ public class EventSourcingAggregateRootTests
         return e;
     }
 
-    private ChangeResult<Orchard> BindCreation()
+    private Result<Orchard> BindCreation()
     {
         return Orchard.Create()
             .AddTree("maple")
@@ -311,7 +316,7 @@ public class EventSourcingAggregateRootTests
             ;
     }
 
-    private ChangeResult<Orchard> InvalidBindCreation()
+    private Result<Orchard> InvalidBindCreation()
     {
         return Orchard.Create()
             .AddTree("maple")

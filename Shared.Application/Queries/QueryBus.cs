@@ -13,7 +13,7 @@ public class QueryBus : IQueryBus
     }
 
     public async Task<TResult> SendQuery<TQuery, TResult>(TQuery query) where TQuery 
-        : Query<TResult> where TResult : QueryResult
+        : Query<TResult>
     {
         return await _mediator.Send(query).ConfigureAwait(false);
     }

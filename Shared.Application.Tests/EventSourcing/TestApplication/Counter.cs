@@ -1,4 +1,5 @@
 using Shared.Abstractions.EventSourcing.Writing;
+using Shared.Abstractions.Kernel;
 using Shared.Kernel.EventSourcing;
 
 namespace Shared.Application.Tests.EventSourcing.TestApplication;
@@ -13,7 +14,7 @@ public class Counter : EventSourcedAggregateRoot<Counter, CounterId>
         RegisterChangeHandler<NumberIncrementedEvent>(NumberUpdatedChangeHandler);
     }
 
-    private ChangeResult<Counter> CounterCreatedEventHandler(CounterCreatedEvent arg)
+    private Result<Counter> CounterCreatedEventHandler(CounterCreatedEvent arg)
     {
         return Success();
     }
@@ -23,12 +24,12 @@ public class Counter : EventSourcedAggregateRoot<Counter, CounterId>
         TryDoChange(new CounterCreatedEvent(Id));
     }
 
-    public ChangeResult<Counter> IncrementNumber()
+    public Result<Counter> IncrementNumber()
     {
         return TryDoChange(new NumberIncrementedEvent(Id));
     }
     
-    private ChangeResult<Counter> NumberUpdatedChangeHandler(NumberIncrementedEvent arg)
+    private Result<Counter> NumberUpdatedChangeHandler(NumberIncrementedEvent arg)
     {
         Number++;
  

@@ -12,7 +12,6 @@ public interface IQueryBus
     /// <typeparam name="TResult"></typeparam>
     /// <typeparam name="TQuery"></typeparam>
     /// <returns></returns>
-    public Task<TResult> SendQuery<TQuery, TResult>(TQuery query) 
-        where TQuery : Query<TResult>
-        where TResult : QueryResult;
+    public Task<TResult> SendQuery<TQuery, TResult>(TQuery query)
+        where TQuery : Query<TResult>;
 }

@@ -33,13 +33,13 @@ public class ResultTests
     }
     
     [Fact]
-    public void CanChangeResultTypes()
+    public void CanResultTypes()
     {
-        var x = ChangeResult<int>.Success(1)
+        var x = Result<int>.Success(1)
             .Map(i => Result<int>.Success(i + 1))
-            .Map(i => CommandResult<int>.Success(i + 1))
             .Map(i => Result<int>.Success(i + 1))
-            .Map(i => ChangeResult<int>.Success(i + 1))
+            .Map(i => Result<int>.Success(i + 1))
+            .Map(i => Result<int>.Success(i + 1))
             ;
                 
         Assert.Equal(5, x.ExpectSuccessAndGet());
@@ -48,8 +48,8 @@ public class ResultTests
     [Fact]
     public void CanDoManyResultsPermutation()
     {
-        var x = ChangeResult<int>.Success(1)
-            .Map(i => CommandResult<int>.Success(i + 1))
+        var x = Result<int>.Success(1)
+            .Map(i => Result<int>.Success(i + 1))
             .Map(i => Result<int>.Success(i + 2));
                 
         Assert.Equal(4, x.ExpectSuccessAndGet());
@@ -59,7 +59,7 @@ public class ResultTests
     public void FailsThroughManyResults()
     {
         var x = Result<int>.Fail("bad")
-            .Map(i => CommandResult<int>.Success(i + 2));
+            .Map(i => Result<int>.Success(i + 2));
                     
         x.AssertFailure();
         Assert.Contains("bad", x.ExpectFailureAndGet().FailureReasons);
@@ -126,11 +126,11 @@ public class ResultTests
     public void CastsBetweenUnitAndTypesOfT()
     {
         // This shouldn't compile if broken so just assert success
-        var x = CommandResult<string>.Success("1")
-            .Map(_ => CommandResult.Success())
+        var x = Result<string>.Success("1")
+            .Map(_ => Result.Success())
             .Map(_ => Result.Success())
             .Map(_ => Result<string>.Success("value"))
-            .Map(s => ChangeResult<string>.Success(s))
+            .Map(s => Result<string>.Success(s))
             ;
                 
         x.AssertSuccessful();
@@ -139,7 +139,7 @@ public class ResultTests
     [Fact]
     public async Task CanDoAsyncMatch()
     {
-        var x = await CommandResult<string>.Success("1")
+        var x = await Result<string>.Success("1")
                 .Match(
                     onSuccess: async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))),
                     onFailure: async f => await Task.Run(() => Task.FromResult(Result<string>.Fail("bad bad not good"))))
@@ -151,7 +151,7 @@ public class ResultTests
     [Fact]
     public async Task CanDoAsyncMap()
     {
-        var x = await CommandResult<string>.Success("1")
+        var x = await Result<string>.Success("1")
                 .Map(s => Task.FromResult(Result<string>.Success(s)))
                 .Map(async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))))
             ;
@@ -160,11 +160,11 @@ public class ResultTests
     }
     
     [Fact]
-    public async Task CanDoAsyncMapFromResultTCommandResult()
+    public async Task CanDoAsyncMapFromResultTResult()
     {
-        var x = await CommandResult<string>.Success("1")
+        var x = await Result<string>.Success("1")
                 .Map(s => Task.FromResult(Result<string>.Success(s)))
-                .Map(async s => await Task.Run(() => Task.FromResult(CommandResult<string>.Success(s))))
+                .Map(async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))))
                 .Map(s => Task.FromResult(Result<string>.Success("yay")))
             ;
         
@@ -174,9 +174,9 @@ public class ResultTests
     [Fact]
     public async Task FailureWorksWithAsyncStuff()
     {
-        var x = await CommandResult.Fail("nope")
+        var x = await Result.Fail("nope")
                 .Map(_ => Task.FromResult(Result<int>.Success(2)))
-                .Map(async i => await Task.Run(() => Task.FromResult(CommandResult<string>.Success($"{i}"))))
+                .Map(async i => await Task.Run(() => Task.FromResult(Result<string>.Success($"{i}"))))
                 .Map(s => Task.FromResult(Result<string>.Success("yay")))
             ;
             
@@ -186,7 +186,7 @@ public class ResultTests
     [Fact]
     public async Task CanDoMatchTask()
     {
-        await CommandResult.Success()
+        await Result.Success()
                 .Match(
                 onSuccess: async _ => await Task.Run(() => Assert.True(true)),
                 onFailure: async _ => await Task.Run(() => Assert.Fail("bad bad not good")))
@@ -196,11 +196,11 @@ public class ResultTests
     [Fact]
     public async Task CanDoAsyncMapFromResultToResult()
     {
-        var x = await CommandResult<string>.Success("1")
+        var x = await Result<string>.Success("1")
                 .Map(_ => Task.FromResult(Result.Success()))
             ;
 
-        var y = await x.Map(_ => Task.FromResult(CommandResult.Success()));
+        var y = await x.Map(_ => Task.FromResult(Result.Success()));
         
             
         x.AssertSuccessful();
@@ -208,7 +208,7 @@ public class ResultTests
     }
      
     [Fact]
-    public async Task CanMapResultToCommandResult()
+    public async Task CanMapResultToResult()
     {
          var x = (await DoThing())
                 .Map(async s => await DoOtherThing())

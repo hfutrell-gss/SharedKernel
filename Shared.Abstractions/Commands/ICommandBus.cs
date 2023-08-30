@@ -1,3 +1,5 @@
+using Shared.Abstractions.Kernel;
+
 namespace Shared.Abstractions.Commands;
 
 /// <summary>
@@ -10,8 +12,8 @@ public interface ICommandBus
     /// </summary>
     /// <param name="command"></param>
     /// <typeparam name="TCommand"></typeparam>
-    /// <returns><see cref="CommandResult"/></returns>
-     public Task<CommandResult> SendCommand<TCommand>(TCommand command) where TCommand : Command;
+    /// <returns><see cref="Result"/></returns>
+     public Task<Result> SendCommand<TCommand>(TCommand command) where TCommand : Command;
 
     /// <summary>
     /// Dispatch a command to the bus
@@ -19,7 +21,7 @@ public interface ICommandBus
     /// <param name="command"></param>
     /// <typeparam name="TCommand"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    /// <returns>A specific type of <see cref="CommandResult"/></returns>
-    public Task<CommandResult<TResult>> SendCommand<TCommand, TResult>(TCommand command)
+    /// <returns>A specific type of <see cref="Result"/></returns>
+    public Task<Result<TResult>> SendCommand<TCommand, TResult>(TCommand command)
         where TCommand : Command<TResult>;
 }

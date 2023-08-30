@@ -1,4 +1,5 @@
 using Shared.Abstractions.EventSourcing.Writing;
+using Shared.Abstractions.Kernel;
 using Shared.Kernel.EventSourcing;
 
 namespace Shared.Kernel.UnitTests.EventSourcing.TestDomain;
@@ -25,14 +26,14 @@ public class Orchard : EventSourcedAggregateRoot<Orchard, OrchardId>
         RegisterChangeHandler<TreeAddedEvent>(AddTree);
     }
     
-    private ChangeResult<Orchard> CreateOrchard(OrchardCreatedEvent e)
+    private Result<Orchard> CreateOrchard(OrchardCreatedEvent e)
     {
         Name = e.Name;
 
         return Success();
     }
 
-    public ChangeResult<Orchard> AddTree(string treeType)
+    public Result<Orchard> AddTree(string treeType)
     {
         if ("invalid".Equals(treeType)) return Fail("tree type cannot be invalid");
         
@@ -41,7 +42,7 @@ public class Orchard : EventSourcedAggregateRoot<Orchard, OrchardId>
         return TryDoChange(e);
     }
 
-    public ChangeResult<Orchard> ThrowException()
+    public Result<Orchard> ThrowException()
     {
         throw new InvalidCastException("Something is borked");
     }
@@ -52,7 +53,7 @@ public class Orchard : EventSourcedAggregateRoot<Orchard, OrchardId>
         TryDoChange(new OrchardCreatedEvent(Id, name));
     }
     
-    private ChangeResult<Orchard> AddTree(TreeAddedEvent obj)
+    private Result<Orchard> AddTree(TreeAddedEvent obj)
     {
         Trees.Add(new Tree(obj.TreeId, obj.TreeType));
         

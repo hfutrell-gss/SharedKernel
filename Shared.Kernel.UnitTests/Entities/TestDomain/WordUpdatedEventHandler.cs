@@ -19,6 +19,8 @@ public class WordUpdatedEventHandler : IDomainEventHandler<WordUpdatedEvent>
     }
 }
 
+// ReSharper disable once UnusedType.Global
+// this is used through MediatR
 public class NumberUpdatedEventHandler : IDomainEventHandler<NumberUpdatedEvent>
 {
     private readonly NumberListener _numberListener;

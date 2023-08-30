@@ -22,24 +22,24 @@ public class CommandTests
         _commandBus = serviceProvider.GetService<ICommandBus>()!;
     }
 
-    private async Task<CommandResult> SendSuccessfulCommandReturningBaseResult()
+    private async Task<Result> SendSuccessfulCommandReturningBaseResult()
     {
         return await _commandBus.SendCommand(new SubtractValueCommand(2));
     }
     
-    private async Task<CommandResult> SendFailedCommandReturningBaseResult()
+    private async Task<Result> SendFailedCommandReturningBaseResult()
     {
         return await _commandBus.SendCommand(new SubtractValueCommand(1));
     }
 
-    private async Task<CommandResult<AddValueCommandResult>> SendSuccessfulCommand()
+    private async Task<Result<AddValueResult>> SendSuccessfulCommand()
     {
-        return await _commandBus.SendCommand<AddValueCommand, AddValueCommandResult>(new AddValueCommand(2));
+        return await _commandBus.SendCommand<AddValueCommand, AddValueResult>(new AddValueCommand(2));
     }
 
-    private async Task<CommandResult<AddValueCommandResult>> SendFailedCommand()
+    private async Task<Result<AddValueResult>> SendFailedCommand()
     {
-        return await _commandBus.SendCommand<AddValueCommand, AddValueCommandResult>(new AddValueCommand(1));
+        return await _commandBus.SendCommand<AddValueCommand, AddValueResult>(new AddValueCommand(1));
     }
         
     [Fact]
@@ -101,7 +101,7 @@ public class CommandTests
     [Fact]
     public void a_success_result_has_success_status()
     {
-        var result = CommandResult.Success();
+        var result = Result.Success();
         
         result.AssertSuccessful();
     }
@@ -109,7 +109,7 @@ public class CommandTests
     [Fact]
     public void a_failed_result_has_failed_status()
     {
-        var result = CommandResult.Fail(FailureDetails.From("ruh roh"));
+        var result = Result.Fail(FailureDetails.From("ruh roh"));
             
         result.AssertFailure();
     }
@@ -117,7 +117,7 @@ public class CommandTests
     [Fact]
     public void a_failed_results_messages_can_be_read()
     {
-        var result = CommandResult.Fail(FailureDetails.From("ruh roh"));
+        var result = Result.Fail(FailureDetails.From("ruh roh"));
                 
         Assert.Contains("ruh roh", result.ExpectFailureAndGet().FailureReasons);
     }
@@ -125,7 +125,7 @@ public class CommandTests
     [Fact]
     public void a_failed_result_can_have_many_messages()
     {
-        var result = CommandResult.Fail(FailureDetails.From("ruh roh", "this not good"));
+        var result = Result.Fail(FailureDetails.From("ruh roh", "this not good"));
                     
         Assert.Contains("ruh roh", result.ExpectFailureAndGet().FailureReasons);
         

@@ -10,7 +10,7 @@ namespace Shared.Kernel.EventSourcing;
 /// for implementing event sourced aggregates
 /// </summary>
 /// <typeparam name="TRoot">
-/// The type of <see cref="AggregateRoot{TId,TIdType}"/> encapsulated in <see cref="Abstractions.EventSourcing.Writing.ChangeResult{TResult}"/>.
+/// The type of <see cref="AggregateRoot{TId,TIdType}"/> encapsulated in <see cref="Result"/>.
 /// The intent is for this to be self-referential for method chaining.
 /// </typeparam>
 /// <typeparam name="TId"><see cref="AggregateRootId{TId}"/> of the aggregate type type. Must be a type of <see cref="Guid"/></typeparam>
@@ -34,12 +34,12 @@ namespace Shared.Kernel.EventSourcing;
 ///         RegisterChangeHandler<ThingNumberChangedEvent>(ThingNumberChangedHandler);     
 ///     }
 ///
-///     public ChangeResult<Thing> ThingCreatedHandler() ...
+///     public Result<Thing> ThingCreatedHandler() ...
 /// 
-///     public ChangeResult<Thing> ThingNumberChangedHandler() ...
+///     public Result<Thing> ThingNumberChangedHandler() ...
 ///
 ///     // Objects should be created with static factory methods
-///     public static ChangeResult<Thing> Create()
+///     public static Result<Thing> Create()
 ///     {
 ///         return new Thing();
 ///     }
@@ -71,7 +71,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
         .Where(e => e is not null)
         .ToList().AsReadOnly()!;
     
-    private readonly Dictionary<Type, Func<ChangeEvent, ChangeResult<TRoot>>> _changeEventHandlers = new();
+    private readonly Dictionary<Type, Func<ChangeEvent, Result<TRoot>>> _changeEventHandlers = new();
     
     /// <summary>
     /// It is not reliable to depend on dates or times in event sourcing.
@@ -122,7 +122,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// The handler is invoked when <see cref="TryDoChange{TChangeEvent}"/> is called
     /// 
     /// </summary>
-    /// <param name="handler">A method taking a <see cref="ChangeEvent"/> and returning a <see cref="Abstractions.EventSourcing.Writing.ChangeResult{TResult}"/></param>
+    /// <param name="handler">A method taking a <see cref="ChangeEvent"/> and returning a <see cref="Result"/></param>
     /// <typeparam name="TChangeEvent">The <see cref="Type"/> of the <see cref="ChangeEvent"/></typeparam>
     /// <example>
     /// <code>
@@ -135,7 +135,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// }
     ///
     /// 
-    /// public ChangeResult<Orchard> AddTree(string treeType)
+    /// public Result<Orchard> AddTree(string treeType)
     /// {
     ///     if (!IsValidTreeType(treeType)) return Failure("tree type not valid");
     ///
@@ -145,7 +145,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// ]]>
     /// </code>
     /// </example>
-    protected void RegisterChangeHandler<TChangeEvent>(Func<TChangeEvent, ChangeResult<TRoot>> handler) where TChangeEvent : ChangeEvent
+    protected void RegisterChangeHandler<TChangeEvent>(Func<TChangeEvent, Result<TRoot>> handler) where TChangeEvent : ChangeEvent
     {
         _changeEventHandlers[typeof(TChangeEvent)] = @event => handler((TChangeEvent) @event);
     }
@@ -154,9 +154,9 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// Report a successful change
     /// </summary>
     /// <returns></returns>
-    protected ChangeResult<TRoot> Success()
+    protected Result<TRoot> Success()
     {
-        return ChangeResult<TRoot>.Success((TRoot)this);
+        return Result<TRoot>.Success((TRoot)this);
     }
 
     /// <summary>
@@ -164,9 +164,9 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// </summary>
     /// <param name="failureReasons"></param>
     /// <returns></returns>
-    protected ChangeResult<TRoot> Fail(params string[] failureReasons)
+    protected Result<TRoot> Fail(params string[] failureReasons)
     {
-        return ChangeResult<TRoot>.Fail(failureReasons);
+        return Result<TRoot>.Fail(failureReasons);
     }      
      
     /// <summary>
@@ -175,7 +175,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// </summary>
     /// <param name="event">The <see cref="ChangeEvent"/> that should be responded to</param>
     /// <typeparam name="TChangeEvent">The <see cref="Type"/> of the <see cref="ChangeEvent"/></typeparam>
-    protected ChangeResult<TRoot> TryDoChange<TChangeEvent>(TChangeEvent @event) where TChangeEvent : ChangeEvent
+    protected Result<TRoot> TryDoChange<TChangeEvent>(TChangeEvent @event) where TChangeEvent : ChangeEvent
     {
         return ApplyChange(@event).Match(
             onSuccess: root =>
@@ -186,9 +186,9 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
 
                 RegisterDomainEvent(@event);
 
-                return ChangeResult<TRoot>.Success(root);
+                return Result<TRoot>.Success(root);
             },
-            onFailure: failure => ChangeResult<TRoot>.Fail(failure));
+            onFailure: failure => Result<TRoot>.Fail(failure));
     }
 
            
@@ -197,7 +197,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// </summary>
     /// <param name="event"></param>
     /// <typeparam name="TChangeEvent"></typeparam>
-    private ChangeResult<TRoot> ApplyChange<TChangeEvent>(TChangeEvent @event) where TChangeEvent : ChangeEvent
+    private Result<TRoot> ApplyChange<TChangeEvent>(TChangeEvent @event) where TChangeEvent : ChangeEvent
     {
         if (!_changeEventHandlers.TryGetValue(@event.GetType(), out var handler))
         {

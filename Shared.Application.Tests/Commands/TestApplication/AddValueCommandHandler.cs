@@ -3,28 +3,28 @@ using Shared.Abstractions.Kernel;
 
 namespace Shared.Application.Tests.Commands.TestApplication;
 
-public class AddValueCommandHandler : ICommandHandler<AddValueCommand, AddValueCommandResult>
+public class AddValueCommandHandler : ICommandHandler<AddValueCommand, AddValueResult>
 {
-    public Task<CommandResult<AddValueCommandResult>> Handle(AddValueCommand request, CancellationToken cancellationToken)
+    public Task<Result<AddValueResult>> Handle(AddValueCommand request, CancellationToken cancellationToken)
     {
         if (request.Value % 2 == 0)
         {
-            return Task.FromResult(CommandResult<AddValueCommandResult>.Success(new AddValueCommandResult(request.Value + 1)));
+            return Task.FromResult(Result<AddValueResult>.Success(new AddValueResult(request.Value + 1)));
         }
 
-        return Task.FromResult(CommandResult<AddValueCommandResult>.Fail("No good"));
+        return Task.FromResult(Result<AddValueResult>.Fail("No good"));
     }
 }
 
 public class SubtractValueCommandHandler : ICommandHandler<SubtractValueCommand>
 {
-    public Task<CommandResult> Handle(SubtractValueCommand request, CancellationToken cancellationToken)
+    public Task<Result> Handle(SubtractValueCommand request, CancellationToken cancellationToken)
     {
         if (request.Value % 2 == 0)
         {
-            return Task.FromResult(CommandResult.Success());
+            return Task.FromResult(Result.Success());
         }
         
-        return Task.FromResult(CommandResult.Fail("value was odd"));
+        return Task.FromResult(Result.Fail("value was odd"));
     }
 }

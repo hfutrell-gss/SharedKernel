@@ -10,7 +10,6 @@ namespace Shared.Abstractions.Queries;
 public interface IQueryHandler<TQuery, TQueryResult>
     : IRequestHandler<TQuery, TQueryResult>
     where TQuery : Query<TQueryResult>
-    where TQueryResult : QueryResult
 {
     public abstract Task<TQueryResult> Handle(TQuery request, CancellationToken cancellationToken);
 }

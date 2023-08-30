@@ -1,4 +1,5 @@
 using MediatR;
+using Shared.Abstractions.Kernel;
 
 namespace Shared.Abstractions.Commands;
 
@@ -7,10 +8,10 @@ namespace Shared.Abstractions.Commands;
 /// </summary>
 /// <typeparam name="TCommand"></typeparam>
 public interface ICommandHandler<in TCommand> 
-    : IRequestHandler<TCommand, CommandResult>
+    : IRequestHandler<TCommand, Result>
     where TCommand : Command
 {
-    public Task<CommandResult> Handle(TCommand request, CancellationToken cancellationToken);
+    public Task<Result> Handle(TCommand request, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -19,8 +20,8 @@ public interface ICommandHandler<in TCommand>
 /// <typeparam name="TCommand"></typeparam>
 /// <typeparam name="TResult"></typeparam>
 public interface ICommandHandler<in TCommand, TResult> 
-    : IRequestHandler<TCommand, CommandResult<TResult>>
-    where TCommand : Command<TResult>, IRequest<CommandResult<TResult>>
+    : IRequestHandler<TCommand, Result<TResult>>
+    where TCommand : Command<TResult>, IRequest<Result<TResult>>
 {
-    public Task<CommandResult<TResult>> Handle(TCommand request, CancellationToken cancellationToken);
+    public Task<Result<TResult>> Handle(TCommand request, CancellationToken cancellationToken);
 }

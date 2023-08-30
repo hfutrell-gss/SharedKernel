@@ -1,5 +1,6 @@
 using MediatR;
 using Shared.Abstractions.Commands;
+using Shared.Abstractions.Kernel;
 
 namespace Shared.Application.Commands;
 
@@ -25,7 +26,7 @@ public class CommandBus : ICommandBus
     /// <param name="command"></param>
     /// <typeparam name="TCommand"></typeparam>
     /// <returns></returns>
-    public async Task<CommandResult> SendCommand<TCommand>(TCommand command) 
+    public async Task<Result> SendCommand<TCommand>(TCommand command) 
         where TCommand : Command
     {
         return await _mediator.Send(command).ConfigureAwait(false);
@@ -38,7 +39,7 @@ public class CommandBus : ICommandBus
     /// <typeparam name="TCommand"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     /// <returns></returns>
-    public async Task<CommandResult<TResult>> SendCommand<TCommand, TResult>(TCommand command) 
+    public async Task<Result<TResult>> SendCommand<TCommand, TResult>(TCommand command) 
         where TCommand : Command<TResult> 
     {
         return await _mediator.Send(command).ConfigureAwait(false);
