@@ -164,4 +164,38 @@ public static class ResultMappingExtensions
             f => Task.FromResult(Result<TMapped>.Fail(f)));
     }
      
+    /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static async Task<TMapped> Resolve<TSuccess, TMapped>(
+        this Task<Result<TSuccess>> result,
+        Func<TSuccess, TMapped> forSuccess,
+        Func<FailureDetails, TMapped> forFailure
+        )
+    {
+        return await (await result).Resolve(
+            success => Task.FromResult(forSuccess(success)),
+            failure => Task.FromResult(forFailure(failure))
+        );
+    }
+     
+    /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static async Task<TMapped> Resolve<TMapped>(
+        this Task<Result> result,
+        Func<Unit, TMapped> forSuccess,
+        Func<FailureDetails, TMapped> forFailure
+    )
+    {
+        return await (await result).Resolve(
+            success => Task.FromResult(forSuccess(success)),
+            failure => Task.FromResult(forFailure(failure))
+        );
+    }
+     
 }

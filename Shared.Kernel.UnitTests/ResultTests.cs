@@ -352,6 +352,58 @@ public class ResultTests
         Assert.Contains("Good k", list);
     }
 
+    [Fact]
+    public async Task DirectlyResolveTasksOfResultOfT()
+    {
+        // This should compile in this structure
+        var x = await DoThing()
+                .Resolve(
+                    forSuccess: s => 1,
+                    forFailure: f => 2)
+            ;
+                    
+        Assert.Equal(1, x);
+    }
+
+    [Fact]
+    public async Task DirectlyResolveTasksOfResult()
+    {
+        // This should compile in this structure
+        var x = await DoOtherThing()
+                .Resolve(
+                    forSuccess: _ => 1,
+                    forFailure: _ => 2)
+            ;
+                        
+        Assert.Equal(1, x);
+    }
+    
+    [Fact]
+    public async Task DirectlyResolveTasksOfResultWithTask()
+    {
+        // This should compile in this structure
+        var x = await DoOtherThing()
+                .Resolve(
+                    forSuccess: _ => Task.FromResult(1),
+                    forFailure: _ => Task.FromResult(2))
+            ;
+                         
+        Assert.Equal(1, await x);
+    }
+     
+    [Fact]
+    public async Task DirectlyResolveTasksOfResultOfTWithTask()
+    {
+        // This should compile in this structure
+        var x = await DoThing()
+                .Resolve(
+                    forSuccess: s => Task.FromResult(1),
+                    forFailure: f => Task.FromResult(2))
+            ;
+                          
+        Assert.Equal(1, await x);
+    }
+      
     private Task<Result<string>> DoThing()
     {
         return Task.FromResult(Result<string>.Success("k"));
