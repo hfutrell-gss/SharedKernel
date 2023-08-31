@@ -315,7 +315,7 @@ public class ResultTests
     public async Task CanDoImplicitFlatMappingAsync()
     {
         // This should compile in this structure
-        var x = await (await DoThing())
+        var x = await DoThing()
                 .Then(async s => await DoThing())
                 .Then(s => "4")
                 .Then(int.Parse)
@@ -329,12 +329,26 @@ public class ResultTests
     {
         var list = new List<string>();
         // This should compile in this structure
-        var x = await (await DoThing())
+        var x = await DoThing()
                 .Then(async s => await DoThing())
                 .Then(s => $"Good {s}")
                 .Then(s => list.Add(s))
             ;
             
+        Assert.Contains("Good k", list);
+    }
+
+    [Fact]
+    public async Task DoesNotCreateResultOfResultOfT()
+    {
+        var list = new List<string>();
+        // This should compile in this structure
+        var x = await DoThing()
+                .Then(s => Result<string>.Success($"Good {s}"))
+                .Then(s => list.Add(s))
+            ;
+                
+        x.AssertSuccessful();
         Assert.Contains("Good k", list);
     }
 

@@ -148,5 +148,20 @@ public static class ResultMappingExtensions
             v => Task.FromResult(Result<TMapped>.Success(mapping(v))),
             f => Task.FromResult(Result<TMapped>.Fail(f)));
     }
+    
+    /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="mapping"></param>
+    /// <returns></returns>
+    public static async Task<Result<TMapped>> Then<TSuccess, TMapped>(
+        this Task<Result<TSuccess>> result,
+        Func<TSuccess, Result<TMapped>> mapping)
+    {
+        return await (await result).MapCoreAsync<Result<TMapped>, Unit>(
+            v => Task.FromResult(mapping(v)),
+            f => Task.FromResult(Result<TMapped>.Fail(f)));
+    }
      
 }
