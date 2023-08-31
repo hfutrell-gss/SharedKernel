@@ -72,17 +72,17 @@ public abstract record ResultBase<TSuccess>
     /// <summary>
     /// Perform an operation on success or failure
     /// </summary>
-    /// <param name="onSuccess"></param>
-    /// <param name="onFailure"></param>
+    /// <param name="forSuccess"></param>
+    /// <param name="forFailure"></param>
     /// <typeparam name="TResult"></typeparam>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     public TResult Resolve<TResult>(
-        Func<TSuccess, TResult> onSuccess,
-        Func<FailureDetails, TResult> onFailure
+        Func<TSuccess, TResult> forSuccess,
+        Func<FailureDetails, TResult> forFailure
     )
     {
-        return Do(onSuccess, onFailure);
+        return Do(forSuccess, forFailure);
     }
 
     /// <summary>

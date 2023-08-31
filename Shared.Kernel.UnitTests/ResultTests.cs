@@ -116,8 +116,8 @@ public class ResultTests
         // This shouldn't compile if broken so just assert success
         Task<Result<string>> task = Result<string>.Success("1")
             .Resolve(
-                onSuccess: Result<string>.Success,
-                onFailure: Result<string>.Fail);
+                forSuccess: Result<string>.Success,
+                forFailure: Result<string>.Fail);
             
         Assert.True(true);
     }
@@ -242,12 +242,112 @@ public class ResultTests
     
         x.AssertSuccessful();
     }
+    
+    [Fact]
+    public async Task CanDoTaskThenTaskOfT()
+    {
+        // This should compile in this structure
+        Result x = await (await DoThing())
+                .Then(async s => await DoOtherThing())
+                .Then(async _ => await DoOtherThing())
+            ;
+    
+        x.AssertSuccessful();
+    }
+    
+    [Fact]
+    public async Task CanDoTaskOfTAndThenATaskAndUseMethodBodies()
+    {
+        // This should compile in this structure
+        var x = await (await DoThing())
+                .Then(async s => await DoThing())
+                .Then(async s => await DoThing())
+                .Then(async s => await DoOtherThing())
+                .Then(async u => await DoThing())
+                .Then(DoStringThing)
+                .Then(async s => await DoOtherThing())
+                .Then(DoThing)
+            ;
+    
+        x.AssertSuccessful();
+    }
+
+    [Fact]
+    public void CanDoImplicitFlatMapping()
+    {
+        // This should compile in this structure
+        var x = Result.Success()
+                .Then(_ => "x")
+                .Then(s => 4)
+            ;
+            
+        Assert.Equal(4, x.ExpectSuccessAndGet());
+    }
+
+    [Fact]
+    public void CanDoImplicitFlatMappingWithActions()
+    {
+        // This should compile in this structure
+        var x = Result.Success()
+                .Then(_ => "x")
+                .Then(_ => new List<string>().Add("as"))
+                .Then(_ => 4)
+            ;
+                
+        Assert.Equal(4, x.ExpectSuccessAndGet());
+    }
+
+    [Fact]
+    public void ClosuresPersistValues()
+    {
+        var list = new List<string>();
+        // This should compile in this structure
+        var x = Result.Success()
+                .Then(_ => "x")
+                .Then(s => list.Add(s))
+                .Then(_ => 4)
+            ;
+                
+        Assert.Contains("x", list);
+    }
+    
+    [Fact]
+    public async Task CanDoImplicitFlatMappingAsync()
+    {
+        // This should compile in this structure
+        var x = await (await DoThing())
+                .Then(async s => await DoThing())
+                .Then(s => "4")
+                .Then(int.Parse)
+            ;
+        
+        Assert.Equal(4, x.ExpectSuccessAndGet());
+    }
+
+    [Fact]
+    public async Task CanDoImplicitFlatMappingAsyncInClojureWithActions()
+    {
+        var list = new List<string>();
+        // This should compile in this structure
+        var x = await (await DoThing())
+                .Then(async s => await DoThing())
+                .Then(s => $"Good {s}")
+                .Then(s => list.Add(s))
+            ;
+            
+        Assert.Contains("Good k", list);
+    }
 
     private Task<Result<string>> DoThing()
     {
         return Task.FromResult(Result<string>.Success("k"));
     }
     
+    private Task<Result<string>> DoStringThing(string s)
+    {
+        return Task.FromResult(Result<string>.Success(s));
+    }
+     
     private Task<Result> DoOtherThing()
     {
         return Task.FromResult(Result.Success());

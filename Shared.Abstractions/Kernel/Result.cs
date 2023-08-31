@@ -149,6 +149,36 @@ public record Result<TResult> : ResultBase<TResult>
     }       
     
     /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="mapping"></param>
+    /// <returns></returns>
+    public Result<TMapped> Then<TMapped>(
+        Func<TResult, TMapped> mapping)
+    {
+        return MapCore<Result<TMapped>, TMapped>(
+            v => Result<TMapped>.Success(mapping(v)),
+            Result<TMapped>.Fail);
+    }       
+    
+    /// <summary>
+    /// Map internal value to new result type
+    /// </summary>
+    /// <param name="mapping"></param>
+    /// <returns></returns>
+    public Result Then(
+        Action<TResult> mapping)
+    {
+        return MapCore<Result, Unit>(
+            r =>
+            {
+                mapping(r);
+                return Result.Success();
+            },
+            Result.Fail);
+    }       
+      
+    /// <summary>
     /// Implicitly cast to a task type
     /// </summary>
     /// <param name="result"></param>
