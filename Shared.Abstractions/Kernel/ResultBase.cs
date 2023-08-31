@@ -44,29 +44,29 @@ public abstract record ResultBase<TSuccess>
     /// <summary>
     /// Perform an action on success or failure
     /// </summary>
-    /// <param name="onSuccess"></param>
-    /// <param name="onFailure"></param>
+    /// <param name="forSuccess"></param>
+    /// <param name="forFailure"></param>
     /// <exception cref="InvalidOperationException"></exception>
     public void Resolve(
-        Action<TSuccess> onSuccess,
-        Action<FailureDetails> onFailure
+        Action<TSuccess> forSuccess,
+        Action<FailureDetails> forFailure
     )
     {
-        Do(s => onSuccess(s), f => onFailure(f));
+        Do(forSuccess, forFailure);
     }
     
     /// <summary>
     /// Perform an action on success or failure
     /// </summary>
-    /// <param name="onSuccess"></param>
-    /// <param name="onFailure"></param>
+    /// <param name="forSuccess"></param>
+    /// <param name="forFailure"></param>
     /// <exception cref="InvalidOperationException"></exception>
     public Task Resolve(
-        Func<TSuccess, Task> onSuccess,
-        Func<FailureDetails, Task> onFailure
+        Func<TSuccess, Task> forSuccess,
+        Func<FailureDetails, Task> forFailure
     )
     {
-        return DoAsync(s => onSuccess(s), f => onFailure(f));
+        return DoAsync(forSuccess, forFailure);
     }
      
     /// <summary>

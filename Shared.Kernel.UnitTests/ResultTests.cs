@@ -188,8 +188,8 @@ public class ResultTests
     {
         await Result.Success()
                 .Resolve(
-                onSuccess: async _ => await Task.Run(() => Assert.True(true)),
-                onFailure: async _ => await Task.Run(() => Assert.Fail("bad bad not good")))
+                forSuccess: async _ => await Task.Run(() => Assert.True(true)),
+                forFailure: async _ => await Task.Run(() => Assert.Fail("bad bad not good")))
             ;
     }
     

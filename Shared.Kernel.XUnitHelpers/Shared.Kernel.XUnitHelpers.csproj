@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Shared.Kernel.TestHelpers</RootNamespace>
-    <Version>3.0.0</Version>
+    <Version>4.0.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared.Abstractions\Shared.Abstractions.csproj" />
