@@ -42,6 +42,6 @@ public record EventType
         if (!typeName.EndsWith("Event"))
             throw new ArgumentException($"The type name {typeName} is invalid for an event. Event names must end with Event");
 
-        return string.Join("", typeName.SkipLast(5));
+        return string.Join("", typeName.Substring(0, typeName.Length - 5));
     }
 }

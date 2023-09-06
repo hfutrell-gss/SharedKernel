@@ -14,3 +14,4 @@ public abstract record EntityId<TId>(TId Id)
     /// <returns></returns>
     public static implicit operator TId(EntityId<TId> id) => id.Id;
 }
+
