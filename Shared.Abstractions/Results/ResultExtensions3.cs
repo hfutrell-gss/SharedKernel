@@ -13,6 +13,7 @@ public static class ResultExtensions3
     /// <typeparam name="TAppend"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
     /// <returns></returns>
     public static Result<(T1, T2, T3, TAppend)> And<T1, T2, T3, TAppend>(
         this Result<(T1, T2, T3)> result,
@@ -51,6 +52,7 @@ public static class ResultExtensions3
     /// <typeparam name="TAppend"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
     /// <returns></returns>
     public static Result<(T1, T2, T3, TAppend)> And<T1, T2, T3, TAppend>(
         this Result<(T1, T2, T3)> result,
@@ -87,6 +89,7 @@ public static class ResultExtensions3
     /// <typeparam name="TAppend"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
     /// <returns></returns>
     public static async Task<Result<(T1, T2, T3, TAppend)>> And<T1, T2, T3, TAppend>(
         this Task<Result<(T1, T2, T3)>> result,
@@ -125,6 +128,7 @@ public static class ResultExtensions3
     /// <typeparam name="TAppend"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
     /// <returns></returns>
     public static async Task<Result<(T1, T2, T3, TAppend)>> And<T1, T2, T3, TAppend>(
         this Task<Result<(T1, T2, T3)>> result,
@@ -165,6 +169,7 @@ public static class ResultExtensions3
     /// <typeparam name="TAppend"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
     /// <returns></returns>
     public static async Task<Result<(T1, T2, T3, TAppend)>> And<T1, T2, T3, TAppend>(
         this Result<(T1, T2, T3)> result,
@@ -203,6 +208,7 @@ public static class ResultExtensions3
     /// <typeparam name="TAppend"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="T3"></typeparam>
     /// <returns></returns>
     public static async Task<Result<(T1, T2, T3, TAppend)>> And<T1, T2, T3, TAppend>(
         this Result<(T1, T2, T3)> result,
@@ -236,10 +242,11 @@ public static class ResultExtensions3
     /// </summary>
     /// <param name="result"></param>
     /// <param name="mapping"></param>
+    /// <typeparam name="TOut"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
     /// <typeparam name="T3"></typeparam>
-    /// <typeparam name="TOut"></typeparam>
+    /// <typeparam name="T4"></typeparam>
     /// <returns></returns>
     public static Result<TOut> Then<T1, T2, T3, T4, TOut>(
         this Result<(T1, T2, T3, T4)> result,
@@ -269,10 +276,11 @@ public static class ResultExtensions3
     /// </summary>
     /// <param name="result"></param>
     /// <param name="mapping"></param>
+    /// <typeparam name="TOut"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
     /// <typeparam name="T3"></typeparam>
-    /// <typeparam name="TOut"></typeparam>
+    /// <typeparam name="T4"></typeparam>
     /// <returns></returns>
     public static Result<TOut> Then<T1, T2, T3, T4, TOut>(
         this Result<(T1, T2, T3, T4)> result,
@@ -302,10 +310,11 @@ public static class ResultExtensions3
     /// </summary>
     /// <param name="result"></param>
     /// <param name="mapping"></param>
+    /// <typeparam name="TOut"></typeparam>
     /// <typeparam name="T1"></typeparam>
     /// <typeparam name="T2"></typeparam>
     /// <typeparam name="T3"></typeparam>
-    /// <typeparam name="TOut"></typeparam>
+    /// <typeparam name="T4"></typeparam>
     /// <returns></returns>
     public static async Task<Result<TOut>> Then<T1, T2, T3, T4, TOut>(
         this Task<Result<(T1, T2, T3, T4)>> result,

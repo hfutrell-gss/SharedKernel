@@ -34,7 +34,13 @@ public sealed record Result : Result<Unit>
     /// <param name="details"></param>
     /// <returns></returns>
     public static Result Fail(FailureDetails details) => new(details);
-
+    
+    /// <summary>
+    /// Without an operation it is safe to implicitly cast
+    /// this for readability
+    /// </summary>
+    /// <returns></returns>
+    public static implicit operator Task<Result>(Result result) => Task.FromResult(result);
 }
 
 /// <summary>
@@ -184,4 +190,12 @@ public record Result<TResult> : ResultBase<TResult>
             },
             Result.Fail);
     }       
+    
+    
+    /// <summary>
+    /// Without an operation it is safe to implicitly cast
+    /// this for readability
+    /// </summary>
+    /// <returns></returns>
+    public static implicit operator Task<Result<TResult>>(Result<TResult> result) => Task.FromResult(result);
 }

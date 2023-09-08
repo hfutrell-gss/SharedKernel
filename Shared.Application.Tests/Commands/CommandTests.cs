@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Commands;
-using Shared.Abstractions.Kernel;
 using Shared.Abstractions.Results;
 using Shared.Application.Tests.Commands.TestApplication;
 using Shared.Application.Extensions;

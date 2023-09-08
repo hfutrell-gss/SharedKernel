@@ -1,5 +1,4 @@
 using Shared.Abstractions.Commands;
-using Shared.Abstractions.Kernel;
 using Shared.Abstractions.Results;
 
 namespace Shared.Application.Tests.Commands.TestApplication;

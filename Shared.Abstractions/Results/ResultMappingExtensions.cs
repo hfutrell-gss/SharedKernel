@@ -129,7 +129,7 @@ public static class ResultMappingExtensions
         Func<Task<Result<TMapped>>> mapping)
     {
         return await (await result.ConfigureAwait(false)).MapCoreAsync<Result<TMapped>, Unit>(
-            u => mapping(),
+            _ => mapping(),
             f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
     

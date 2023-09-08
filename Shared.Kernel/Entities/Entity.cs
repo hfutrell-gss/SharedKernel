@@ -19,7 +19,6 @@ public abstract class Entity<TId>
     /// 
     /// </summary>
     /// <param name="id">The strictly typed Id</param>
-    /// <param name="eventAggregator">An event aggregator that hooks the entity into the event system</param>
     /// <exception cref="ArgumentNullException">If the id is null</exception>
     /// <exception cref="ArgumentNullException">If the eventAggregator is null</exception>
     protected Entity(TId id)

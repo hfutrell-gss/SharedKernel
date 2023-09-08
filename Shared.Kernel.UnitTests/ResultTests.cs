@@ -1,10 +1,7 @@
-﻿using System.Runtime.InteropServices.ComTypes;
-using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine.Helpers;
-using Shared.Abstractions.Commands;
-using Shared.Abstractions.EventSourcing.Writing;
-using Shared.Abstractions.Kernel;
-using Shared.Abstractions.Results;
+﻿using Shared.Abstractions.Results;
 using Shared.Kernel.TestHelpers;
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS0162 // Unreachable code detected
 
 namespace Shared.Kernel.UnitTests;
 
@@ -38,10 +35,10 @@ public class ResultTests
     public void CanResultTypes()
     {
         var x = Result<int>.Success(1)
-            .Then(i => Result<int>.Success(i + 1))
-            .Then(i => Result<int>.Success(i + 1))
-            .Then(i => Result<int>.Success(i + 1))
-            .Then(i => Result<int>.Success(i + 1))
+                .Then(i => Result<int>.Success(i + 1))
+                .Then(i => Result<int>.Success(i + 1))
+                .Then(i => Result<int>.Success(i + 1))
+                .Then(i => Result<int>.Success(i + 1))
             ;
                 
         Assert.Equal(5, x.ExpectSuccessAndGet());
@@ -115,9 +112,9 @@ public class ResultTests
     [Fact]
     public void NullForSuccessThrowsAnInvalidState()
     {
-        Assert.Throws<InvalidResultStateException>(() => 
+        Assert.Throws<InvalidResultStateException>((Action)(() => 
             Result<Result>.Success(null)
-                .Then(r => Result<int>.Success(1)));
+                .Then(_ => Result<int>.Success(1))));
     }
      
     [Fact]
@@ -137,11 +134,11 @@ public class ResultTests
     [Fact]
     public void MatchingOnNullThrows()
     {
-        Assert.Throws<InvalidResultStateException>(() =>
-            Result<Result>.Success(null)
-                .Resolve(
-                    forSuccess: s => Result<string>.Success("["),
-                    forFailure: f => (Result<string>.Fail("bad bad not good"))))
+        Assert.Throws<InvalidResultStateException>((Action)(() =>
+                Result<Result>.Success(null)
+                    .Resolve(
+                        forSuccess: _ => Result<string>.Success("["),
+                        forFailure: _ => Result<string>.Fail("bad bad not good"))))
             ;
     }
         
@@ -151,7 +148,7 @@ public class ResultTests
         var x = await Result<string>.Success("1")
                 .Resolve(
                     forSuccess: async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))),
-                    forFailure: async f => await Task.Run(() => Task.FromResult(Result<string>.Fail("bad bad not good"))))
+                    forFailure: async _ => await Task.Run(() => Task.FromResult(Result<string>.Fail("bad bad not good"))))
             ;
 
         x.AssertSuccessful();
@@ -174,7 +171,7 @@ public class ResultTests
         var x = await Result<string>.Success("1")
                 .Then(s => Task.FromResult(Result<string>.Success(s)))
                 .Then(async s => await Task.Run(() => Task.FromResult(Result<string>.Success(s))))
-                .Then(s => Task.FromResult(Result<string>.Success("yay")))
+                .Then(_ => Task.FromResult(Result<string>.Success("yay")))
             ;
         
         x.AssertSuccessful();
@@ -186,7 +183,7 @@ public class ResultTests
         var x = await Result.Fail("nope")
                 .Then(_ => Task.FromResult(Result<int>.Success(2)))
                 .Then(async i => await Task.Run(() => Task.FromResult(Result<string>.Success($"{i}"))))
-                .Then(s => Task.FromResult(Result<string>.Success("yay")))
+                .Then(_ => Task.FromResult(Result<string>.Success("yay")))
             ;
             
         Assert.Contains("nope", x.ExpectFailureAndGet().FailureReasons);
@@ -212,7 +209,7 @@ public class ResultTests
                         throw new Exception("hi");
                         await Task.Run(() => Assert.True(true));
                     },
-                    forFailure: async f => await Task.Run(() => Assert.Equal("hi", f.Exception.Message)))
+                    forFailure: async f => await Task.Run(() => Assert.Equal("hi", f.Exception!.Message)))
             ;
     }
     
@@ -223,7 +220,7 @@ public class ResultTests
             await Result<Result>.Success(null)
                 .Resolve(
                     forSuccess: _ => Task.FromResult(Task.FromResult(1)),
-                    forFailure: f => Task.FromResult(Task.FromResult(2))));
+                    forFailure: _ => Task.FromResult(Task.FromResult(2))));
     }
         
     [Fact]
@@ -235,7 +232,7 @@ public class ResultTests
                     {
                         await Task.Run(() => Assert.True(false, "Should not succeed"));
                     },
-                    forFailure: async f => await Task.Run(() => Assert.True(true)))
+                    forFailure: async _ => await Task.Run(() => Assert.True(true)))
             ;
     }
       
@@ -248,7 +245,7 @@ public class ResultTests
             await Result<Result>.Success(null)
                     .Resolve(
                         forSuccess: async _ => { await Task.Run(() => Assert.True(false, "Should not succeed")); },
-                        forFailure: async f => await Task.Run(() => Assert.True(true)))
+                        forFailure: async _ => await Task.Run(() => Assert.True(true)))
                 ;
         });
     }
@@ -272,7 +269,7 @@ public class ResultTests
     {
         // This should compile in this structure
         Result x = await (await DoThing())
-                .Then(async s => await DoOtherThing())
+                .Then(async _ => await DoOtherThing())
                 .Then(_ => Result.Success())
             ;
 
@@ -284,8 +281,8 @@ public class ResultTests
     {
         // This should compile in this structure
         Result<string> x = await (await DoThing())
-                .Then(async s => await DoOtherThing())
-                .Then(a => Result<string>.Success("k"))
+                .Then(async _ => await DoOtherThing())
+                .Then(_ => Result<string>.Success("k"))
             ;
     
         x.AssertSuccessful();
@@ -296,7 +293,7 @@ public class ResultTests
     {
         // This should compile in this structure
         Result x = await (await DoThing())
-                .Then(async s => await DoOtherThing())
+                .Then(async _ => await DoOtherThing())
                 .Then(async _ => await DoOtherThing())
             ;
     
@@ -308,7 +305,7 @@ public class ResultTests
     {
         // This should compile in this structure
         Result x = await (await DoThing())
-                .Then(async s => await DoOtherThing())
+                .Then(async _ => await DoOtherThing())
                 .Then(async _ => await DoOtherThing())
             ;
     
@@ -320,12 +317,12 @@ public class ResultTests
     {
         // This should compile in this structure
         var x = await (await DoThing())
-                .Then(async s => await DoThing())
-                .Then(async s => await DoThing())
-                .Then(async s => await DoOtherThing())
-                .Then(async u => await DoThing())
+                .Then(async _ => await DoThing())
+                .Then(async _ => await DoThing())
+                .Then(async _ => await DoOtherThing())
+                .Then(async _ => await DoThing())
                 .Then(DoStringThing)
-                .Then(async s => await DoOtherThing())
+                .Then(async _ => await DoOtherThing())
                 .Then(DoThing)
             ;
     
@@ -338,7 +335,7 @@ public class ResultTests
         // This should compile in this structure
         var x = Result.Success()
                 .Then(_ => "x")
-                .Then(s => 4)
+                .Then(_ => 4)
             ;
             
         Assert.Equal(4, x.ExpectSuccessAndGet());
@@ -362,11 +359,10 @@ public class ResultTests
     {
         var list = new List<string>();
         // This should compile in this structure
-        var x = Result.Success()
-                .Then(_ => "x")
-                .Then(s => list.Add(s))
-                .Then(_ => 4)
-            ;
+        Result.Success()
+            .Then(_ => "x")
+            .Then(s => list.Add(s))
+            .Then(_ => 4);
                 
         Assert.Contains("x", list);
     }
@@ -376,8 +372,8 @@ public class ResultTests
     {
         // This should compile in this structure
         var x = await DoThing()
-                .Then(async s => await DoThing())
-                .Then(s => "4")
+                .Then(async _ => await DoThing())
+                .Then(_ => "4")
                 .Then(int.Parse)
             ;
         
@@ -385,21 +381,36 @@ public class ResultTests
     }
 
     [Fact]
+    public void ImplicitlyCastsToTask()
+    {
+        Task<Result> result = Result.Success();
+            
+        Assert.True(true);
+    }
+    
+    [Fact]
+    public void ImplicitlyCastsResultOfTToTask()
+    {
+        Task<Result<string>> result = Result<string>.Success("k");
+            
+        Assert.True(true);
+    }
+
+    [Fact]
     public async Task ExceptionsInAsyncReturnFailure()
     {
         // This should compile in this structure
         var x = await DoThing()
-                .Then(async s =>
+                .Then(async _ =>
                 {
                     throw new Exception("hi");
                     return await DoThing();
                 })
-                .Then(s => "4")
+                .Then(_ => "4")
                 .Then(int.Parse)
             ;
 
-        ;
-        Assert.Equal("hi", x.ExpectFailureAndGet().Exception.Message);
+        Assert.Equal("hi", x.ExpectFailureAndGet().Exception!.Message);
     }
 
     [Fact]
@@ -407,11 +418,10 @@ public class ResultTests
     {
         var list = new List<string>();
         // This should compile in this structure
-        var x = await DoThing()
-                .Then(async s => await DoThing())
-                .Then(s => $"Good {s}")
-                .Then(s => list.Add(s))
-            ;
+        await DoThing()
+            .Then(async _ => await DoThing())
+            .Then(s => $"Good {s}")
+            .Then(s => list.Add(s));
             
         Assert.Contains("Good k", list);
     }
@@ -436,8 +446,8 @@ public class ResultTests
         // This should compile in this structure
         var x = await DoThing()
                 .Resolve(
-                    forSuccess: s => 1,
-                    forFailure: f => 2)
+                    forSuccess: _ => 1,
+                    forFailure: _ => 2)
             ;
                     
         Assert.Equal(1, x);
@@ -475,8 +485,8 @@ public class ResultTests
         // This should compile in this structure
         var x = await DoThing()
                 .Resolve(
-                    forSuccess: s => Task.FromResult(1),
-                    forFailure: f => Task.FromResult(2))
+                    forSuccess: _ => Task.FromResult(1),
+                    forFailure: _ => Task.FromResult(2))
             ;
                           
         Assert.Equal(1, await x);
@@ -556,13 +566,20 @@ public class ResultTests
                     .And(_ => Task.FromResult(1))
                     .Then((s, i) => $"{s} {i}")
             ;
-         
+        
+        var x7 = 
+                await Task.FromResult(Result<string>.Success(expectedString))
+                    .And(_ => (1))
+                    .Then((s, i) => $"{s} {i}")
+            ;        
+        
         Assert.Equal($"{expectedString} 1", x1.SuccessValue);
         Assert.Equal($"{expectedString} 1", x2.SuccessValue);
         Assert.Equal($"{expectedString} 1", x3.SuccessValue);
         Assert.Equal($"{expectedString} 1", x4.SuccessValue);
         Assert.Equal($"{expectedString} 1", x5.SuccessValue);
         Assert.Equal($"{expectedString} 1", x6.SuccessValue);
+        Assert.Equal($"{expectedString} 1", x7.SuccessValue);
     }
      
     [Fact]

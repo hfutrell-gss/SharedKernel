@@ -1,5 +1,4 @@
 using Shared.Abstractions.EventSourcing.Writing;
-using Shared.Abstractions.Kernel;
 using Shared.Abstractions.Results;
 using Shared.Kernel.TestHelpers;
 using Shared.Kernel.UnitTests.EventSourcing.TestDomain;
@@ -10,9 +9,9 @@ namespace Shared.Kernel.UnitTests.EventSourcing;
 public class EventSourcingAggregateRootTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
-    private OrchardId _orchardId;
+    private OrchardId? _orchardId;
     private string? _orchardName;
-    private Orchard _orchard;
+    private Orchard? _orchard;
 
     [Fact]
     void
@@ -82,7 +81,7 @@ public class EventSourcingAggregateRootTests
     {
         var creation = GetCreateOrchardEvent();
         var tree1 = GetTreeAddedEvent() as TreeAddedEvent;
-        var tree2 = GetTreeAddedEvent() as TreeAddedEvent; // left out of history
+        _ = GetTreeAddedEvent() as TreeAddedEvent;
         var tree3 = GetTreeAddedEvent() as TreeAddedEvent;
 
         Assert.Throws<InvalidOperationException>(() => Orchard.FromHistory(new ChangeEvent[] {creation, tree1!, tree3!}));
@@ -93,7 +92,7 @@ public class EventSourcingAggregateRootTests
         if_no_creation_event_then_fails
         ()
     {
-        var creation = GetCreateOrchardEvent();
+        GetCreateOrchardEvent();
         var tree1 = GetTreeAddedEvent() as TreeAddedEvent;
         var tree2 = GetTreeAddedEvent() as TreeAddedEvent; // left out of history
         var tree3 = GetTreeAddedEvent() as TreeAddedEvent;
@@ -117,10 +116,10 @@ public class EventSourcingAggregateRootTests
         more_than_one_creation_event_cannot_be_created
         ()
     {
-        var creation = GetCreateOrchardEvent();
-        var tree1 = GetTreeAddedEvent() as TreeAddedEvent;
-        var tree2 = GetTreeAddedEvent() as TreeAddedEvent; // left out of history
-        var tree3 = GetTreeAddedEvent() as TreeAddedEvent;
+        GetCreateOrchardEvent();
+        _ = GetTreeAddedEvent() as TreeAddedEvent;
+        _ = GetTreeAddedEvent() as TreeAddedEvent;
+        _ = GetTreeAddedEvent() as TreeAddedEvent;
         Assert.Null(GetBadCreateOrchardEvent());
     }
 
@@ -131,7 +130,7 @@ public class EventSourcingAggregateRootTests
     {
         var creation = GetCreateOrchardEvent();
         
-        Assert.Equal(_orchardId, creation.AggregateId);
+        Assert.Equal(_orchardId!, creation.AggregateId);
     }
 
     [Fact]
@@ -139,10 +138,10 @@ public class EventSourcingAggregateRootTests
         change_events_have_aggregate_id
         ()
     {
-        var creation = GetCreateOrchardEvent();
+        GetCreateOrchardEvent();
         var tree = GetTreeAddedEvent();
             
-        Assert.Equal(_orchardId, tree.AggregateId);
+        Assert.Equal(_orchardId!, tree.AggregateId);
     }
 
     [Fact]
@@ -231,7 +230,9 @@ public class EventSourcingAggregateRootTests
             BindCreation().Then(o =>
                 {
                     throw new Exception("Ruh roh");
+#pragma warning disable CS0162 // Unreachable code detected
                     return Result<string>.Success(o.Name);
+#pragma warning restore CS0162 // Unreachable code detected
                 })
                 .ExpectFailureAndGet().FailureReasons.First()); 
     }
@@ -242,10 +243,12 @@ public class EventSourcingAggregateRootTests
         ()
     {
         BindCreation()
-            .Then<string>(o =>
+            .Then<string>(_ =>
             {
                 throw new Exception("Ruh roh");
+#pragma warning disable CS0162 // Unreachable code detected
                 return Result.Success();
+#pragma warning restore CS0162 // Unreachable code detected
             }).AssertFailure();
     }
 
@@ -279,10 +282,10 @@ public class EventSourcingAggregateRootTests
 
     private CreationEvent<OrchardId> GetBadCreateOrchardEvent()
     {
-        _orchard.DoIncorrectCreation("Bad orchard");
+        _orchard!.DoIncorrectCreation("Bad orchard");
         var e = _orchard.Events.Last() as CreationEvent<OrchardId>;
 
-        return e;
+        return e!;
     }
     
     private CreationEvent<OrchardId> GetCreateOrchardEvent(string name)
@@ -307,9 +310,9 @@ public class EventSourcingAggregateRootTests
         return GetTreeAddedEvent(_orchard);
     }
 
-    private ChangeEvent GetTreeAddedEvent(Orchard orchard)
+    private ChangeEvent GetTreeAddedEvent(Orchard? orchard)
     {
-        orchard
+        orchard!
             .AddTree(Guid.NewGuid().ToString())
             ;
 

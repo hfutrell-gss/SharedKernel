@@ -9,8 +9,6 @@ public class EventTests
     [Fact]
     public void have_a_version_number()
     {
-        var e = new OrchardCreatedEvent(new OrchardId(Guid.NewGuid()), "x");
-        
         Assert.True(DomainEvent.DomainEventVersion > 0);
     }
     

@@ -168,6 +168,33 @@ public static class ResultExtensions
             return Result<(T1, TAppend)>.Fail(ex);
         }
     }
+    
+    /// <summary>
+    /// Append resolved execution context
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="mapping"></param>
+    /// <typeparam name="TAppend"></typeparam>
+    /// <typeparam name="T1"></typeparam>
+    /// <returns></returns>
+    public static async Task<Result<(T1, TAppend)>> And<T1, TAppend>(
+        this Task<Result<T1>> result,
+        Func<T1, TAppend> mapping)
+    {
+        var awaitedResult = await result.ConfigureAwait(false);
+        if (awaitedResult.Failed) return Result<(T1, TAppend)>.Fail(awaitedResult.FailureDetails);
+                    
+        try
+        {
+            var nextResult = mapping(awaitedResult.SuccessValue);
+            
+            return Result<(T1, TAppend)>.Success((awaitedResult.SuccessValue, nextResult));
+        }
+        catch (Exception ex)
+        {
+            return Result<(T1, TAppend)>.Fail(ex);
+        }
+    }
 
     /// <summary>
     /// Map prior values into an output

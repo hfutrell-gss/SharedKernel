@@ -1,5 +1,4 @@
 using Shared.Abstractions.EventSourcing.Writing;
-using Shared.Abstractions.Kernel;
 using Shared.Abstractions.Results;
 using Shared.Kernel.EventSourcing;
 

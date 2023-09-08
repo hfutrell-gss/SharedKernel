@@ -1,4 +1,3 @@
-using MediatR;
 using Shared.Abstractions.Commands;
 
 namespace Shared.Application.Tests.Commands.TestApplication;

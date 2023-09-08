@@ -1,5 +1,4 @@
 using Shared.Abstractions.EventSourcing.Writing;
-using Shared.Abstractions.Kernel;
 using Shared.Abstractions.Results;
 using Shared.Kernel.EventSourcing;
 
@@ -16,12 +15,12 @@ public class Orchard : EventSourcedAggregateRoot<Orchard, OrchardId>
         TryDoChange(new OrchardCreatedEvent(Id, ""));
     }
     
-    public Orchard(OrchardId id, string name) : this(id)
+    public Orchard(OrchardId? id, string name) : this(id)
     {
         TryDoChange(new OrchardCreatedEvent(id, name));
     }
 
-    private Orchard(OrchardId id) : base(id)
+    private Orchard(OrchardId? id) : base(id!)
     {
         RegisterChangeHandler<OrchardCreatedEvent>(CreateOrchard);
         RegisterChangeHandler<TreeAddedEvent>(AddTree);

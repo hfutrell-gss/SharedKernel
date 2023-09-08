@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Events;
 using Shared.Application.Extensions;
 using Shared.Kernel.UnitTests.Entities.TestDomain;
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 
 namespace Shared.Kernel.UnitTests.Entities;
 
@@ -97,7 +98,7 @@ public class AggregateRootAndEntityTests
         
         await _dispatcher.DispatchAndClearDomainEvents(aggregate, new CancellationToken());
 
-        var numbers = _numberListener.Numbers;
+        var numbers = _numberListener!.Numbers;
 
         Assert.Equal(3, numbers.Pop());        
         Assert.Equal(2, numbers.Pop());        
@@ -107,7 +108,7 @@ public class AggregateRootAndEntityTests
     readonly IServiceProvider _services;
 
     readonly IDomainEventDispatcher _dispatcher;
-    private readonly NumberListener _numberListener;
+    private readonly NumberListener? _numberListener;
 
     public AggregateRootAndEntityTests()
     {

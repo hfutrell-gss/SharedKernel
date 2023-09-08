@@ -1,5 +1,4 @@
 using Shared.Abstractions.EventSourcing.Writing;
-using Shared.Kernel.EventSourcing;
 
 namespace Shared.Kernel.UnitTests.EventSourcing.TestDomain;
 
