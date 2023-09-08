@@ -72,7 +72,14 @@ public record Result<TResult> : ResultBase<TResult>
     /// <param name="reasons"></param>
     /// <returns></returns>
     public static Result<TResult> Fail(params string[] reasons) => new(FailureDetails.From(reasons));
-    
+
+    /// <summary>
+    /// Create failure from exception
+    /// </summary>
+    /// <param name="ex"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(Exception ex) => new(FailureDetails.From(ex));
+
     /// <summary>
     /// Create failure from details
     /// </summary>
@@ -119,7 +126,7 @@ public record Result<TResult> : ResultBase<TResult>
     {
         return await MapCoreAsync<Result<TMapped>, TMapped>(
             mapping,
-            f => Task.FromResult(Result<TMapped>.Fail(f)));
+            f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -132,7 +139,7 @@ public record Result<TResult> : ResultBase<TResult>
     {
         return await MapCoreAsync<Result, Unit>(
             mapping,
-            f => Task.FromResult(Result.Fail(f)));
+            f => Task.FromResult(Result.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -177,11 +184,4 @@ public record Result<TResult> : ResultBase<TResult>
             },
             Result.Fail);
     }       
-      
-    /// <summary>
-    /// Implicitly cast to a task type
-    /// </summary>
-    /// <param name="result"></param>
-    /// <returns></returns>
-    public static implicit operator Task<Result<TResult>>(Result<TResult> result) => Task.FromResult(result);
 }

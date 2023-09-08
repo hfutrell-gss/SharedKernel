@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine.Helpers;
+﻿using System.Runtime.InteropServices.ComTypes;
+using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine.Helpers;
 using Shared.Abstractions.Commands;
 using Shared.Abstractions.EventSourcing.Writing;
 using Shared.Abstractions.Kernel;
@@ -108,18 +109,6 @@ public class ResultTests
         
         x.AssertSuccessful();
         Assert.Equal(1, x.ExpectSuccessAndGet());
-    }
-    
-    [Fact]
-    public void ImplicitlyCastsToATask()
-    {
-        // This shouldn't compile if broken so just assert success
-        Task<Result<string>> task = Result<string>.Success("1")
-            .Resolve(
-                forSuccess: Result<string>.Success,
-                forFailure: Result<string>.Fail);
-            
-        Assert.True(true);
     }
     
     [Fact]
@@ -402,6 +391,272 @@ public class ResultTests
             ;
                           
         Assert.Equal(1, await x);
+    }
+      
+    [Fact]
+    public void CanUseIfThenForSuccessfulResult()
+    {
+        var x = Result<string>.Success("k");
+        
+        Assert.True(x.Succeeded);
+        Assert.Equal("k", x.SuccessValue);
+    }
+     
+    [Fact]
+    public void CanUseIfThenForFailedResult()
+    {
+        var x = Result<string>.Fail("Not good");
+            
+        Assert.True(x.Failed);
+        Assert.Equal(new[]{"Not good"}, x.FailureDetails.FailureReasons);
+    }
+     
+    [Fact]
+    public void ThrowsWhenGettingSuccessValueForFailed()
+    {
+        var x = Result<string>.Fail("Not good");
+                
+        Assert.Throws<InvalidOperationException>(() => x.SuccessValue);
+    }
+    
+    [Fact]
+    public void ThrowsWhenGettingFailureValueForSucceeded()
+    {
+        var x = Result<string>.Success("Not good");
+                    
+        Assert.Throws<InvalidOperationException>(() => x.FailureDetails);
+    }
+     
+    [Fact]
+    public async Task CanChainWithAndOnce()
+    {
+        var expectedString = "alright";
+        
+        var x1 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => Result<int>.Success(1))
+                    .Then((s, i) => Result<string>.Success($"{s} {i}"))
+            ;
+        
+        var x2 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => 1)
+                    .Then((s, i) => $"{s} {i}")
+            ;
+                         
+        var x3 = 
+                await Task.FromResult(Result<string>.Success(expectedString))
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i) => $"{s} {i}")
+            ;
+         
+        var x4 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i) => $"{s} {i}")
+            ;
+         
+        var x5 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(1))
+                    .Then((s, i) => $"{s} {i}")
+            ;
+        
+        var x6 = 
+                await Task.FromResult(Result<string>.Success(expectedString))
+                    .And(_ => Task.FromResult(1))
+                    .Then((s, i) => $"{s} {i}")
+            ;
+         
+        Assert.Equal($"{expectedString} 1", x1.SuccessValue);
+        Assert.Equal($"{expectedString} 1", x2.SuccessValue);
+        Assert.Equal($"{expectedString} 1", x3.SuccessValue);
+        Assert.Equal($"{expectedString} 1", x4.SuccessValue);
+        Assert.Equal($"{expectedString} 1", x5.SuccessValue);
+        Assert.Equal($"{expectedString} 1", x6.SuccessValue);
+    }
+     
+    [Fact]
+    public async Task CanChainWithAndTwice()
+    {
+        var expectedString = "a";
+        
+        var x1 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => Result<int>.Success(1))
+                    .And((_, _) => Result<int>.Success(1))
+                    .Then((s, i, c) => Result<string>.Success($"{s} {i} {c}"))
+            ;
+        
+        var x2 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => 1)
+                    .And((_, _) => 1)
+                    .Then((s, i, c) => $"{s} {i} {c}")
+            ;
+                         
+        var x3 = 
+                await Task.FromResult(Result<string>.Success(expectedString))
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i, c) => $"{s} {i} {c}")
+            ;
+         
+        var x4 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Result<int>.Success(1))
+                    .And((_, _) => Task.FromResult(1))
+                    .Then((s, i, c) => $"{s} {i} {c}")
+            ;
+         
+        var x5 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Result<int>.Success(1))
+                    .And((_, _) => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i, c) => $"{s} {i} {c}")
+            ;
+        
+        var x6 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(1))
+                    .Then((s, i, c) => $"{s} {i} {c}")
+            ;
+         
+        Assert.Equal($"{expectedString} 1 1", x1.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1", x2.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1", x3.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1", x4.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1", x5.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1", x6.SuccessValue);
+    }
+     
+    [Fact]
+    public async Task CanChainWithAndThrice()
+    {
+        var expectedString = "a";
+            
+        var x1 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => Result<int>.Success(1))
+                    .And((_, _) => Result<int>.Success(1))
+                    .And((_, _, _) => Result<int>.Success(1))
+                    .Then((s, i, c, d) => Result<string>.Success($"{s} {i} {c} {d}"))
+            ;
+            
+        var x2 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => 1)
+                    .And((_, _) => 1)
+                    .And((_, _, _) => 1)
+                    .Then((s, i, c, d) => $"{s} {i} {c} {d}")
+            ;
+                             
+        var x3 = 
+                await Task.FromResult(Result<string>.Success(expectedString))
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _, _) => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i, c, d) => $"{s} {i} {c} {d}")
+            ;
+             
+        var x4 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _, _) => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i, c, d) => $"{s} {i} {c} {d}")
+            ;
+             
+        var x5 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(1))
+                    .And((_, _) => Task.FromResult(1))
+                    .And((_, _, _) => Task.FromResult(1))
+                    .Then((s, i, c, d) => $"{s} {i} {c} {d}")
+            ;
+        
+         var x6 = 
+                 await Result<string>.Success(expectedString)
+                     .And(_ => Task.FromResult(Result<int>.Success(1)))
+                     .And((_, _) => Task.FromResult(1))
+                     .And((_, _, _) => Task.FromResult(1))
+                     .Then((s, i, c, d) => $"{s} {i} {c} {d}")
+             ;
+             
+        Assert.Equal($"{expectedString} 1 1 1", x1.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1", x2.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1", x3.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1", x4.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1", x5.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1", x6.SuccessValue);
+    }
+    
+    [Fact]
+    public async Task CanChainFourWholeTimes()
+    {
+        var expectedString = "a";
+                 
+        var x1 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => Result<int>.Success(1))
+                    .And((_, _) => Result<int>.Success(1))
+                    .And((_, _, _) => Result<int>.Success(1))
+                    .And((_, _, _, _) => Result<int>.Success(1))
+                    .Then((s, i, c, d, e) => Result<string>.Success($"{s} {i} {c} {d} {e}"))
+            ;
+                 
+        var x2 = 
+                Result<string>.Success(expectedString)
+                    .And(_ => 1)
+                    .And((_, _) => 1)
+                    .And((_, _, _) => 1)
+                    .And((_, _, _, _) => 1)
+                    .Then((s, i, c, d, e) => $"{s} {i} {c} {d} {e}")
+            ;
+                                  
+        var x3 = 
+                await Task.FromResult(Result<string>.Success(expectedString))
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _, _) => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _, _, _) => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i, c, d, e) => $"{s} {i} {c} {d} {e}")
+            ;
+                  
+        var x4 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _, _) => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _, _, _) => Task.FromResult(Result<int>.Success(1)))
+                    .Then((s, i, c, d, e) => $"{s} {i} {c} {d} {e}")
+            ;
+                  
+        var x5 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(1))
+                    .And((_, _) => Task.FromResult(1))
+                    .And((_, _, _) => Task.FromResult(1))
+                    .And((_, _, _, _) => Task.FromResult(1))
+                    .Then((s, i, c, d, e) => $"{s} {i} {c} {d} {e}")
+            ;
+             
+        var x6 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(1))
+                    .And((_, _, _) => Task.FromResult(1))
+                    .And((_, _, _, _) => Task.FromResult(1))
+                    .Then((s, i, c, d, e) => $"{s} {i} {c} {d} {e}")
+            ;
+                  
+        Assert.Equal($"{expectedString} 1 1 1 1", x1.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1 1", x2.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1 1", x3.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1 1", x4.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1 1", x5.SuccessValue);
+        Assert.Equal($"{expectedString} 1 1 1 1", x6.SuccessValue);
     }
       
     private Task<Result<string>> DoThing()

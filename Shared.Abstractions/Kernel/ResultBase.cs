@@ -24,6 +24,30 @@ public abstract record ResultBase<TSuccess>
     private readonly FailureDetails? _failure;
 
     /// <summary>
+    /// True if the operation succeeded
+    /// </summary>
+    public bool Succeeded => _success is not null;
+    
+    /// <summary>
+    /// True if the operation failed
+    /// </summary>
+    public bool Failed => _failure is not null;
+
+    /// <summary>
+    /// Get the success value if succeeded
+    /// </summary>
+    /// <exception cref="InvalidOperationException">If retrieving success value on a failed operation</exception>
+    public TSuccess SuccessValue =>
+        _success ?? throw new InvalidOperationException("Tried to get success value on a failed operation");
+    
+    /// <summary>
+    /// Get the failure details if failed
+    /// </summary>
+    /// <exception cref="InvalidOperationException">If retrieving failure value on a successful operation</exception>
+    public FailureDetails FailureDetails => 
+        _failure ?? throw new InvalidOperationException("Tried to get failure value on successful operation");
+    
+    /// <summary>
     /// Internal success constructor
     /// </summary>
     /// <param name="success"></param>
