@@ -1,5 +1,6 @@
 using Shared.Abstractions.EventSourcing.Writing;
 using Shared.Abstractions.Kernel;
+using Shared.Abstractions.Results;
 using Shared.Kernel.TestHelpers;
 using Shared.Kernel.UnitTests.EventSourcing.TestDomain;
 using Xunit.Abstractions;
@@ -156,6 +157,20 @@ public class EventSourcingAggregateRootTests
         Assert.Equal(0, orchard2.EventSourcingEvents.Count);
     }
 
+    private record FakeEvent(Guid AggregateId) : ChangeEvent(AggregateId);
+    
+    [Fact]
+    void
+        applying_a_non_existing_event_type_throws
+        ()
+    {
+        var creation = GetCreateOrchardEvent();
+        var fakeEvent = (ChangeEvent)new FakeEvent(Guid.NewGuid());
+        fakeEvent.SetSequence(new EventSequenceNumber(2));
+
+        Assert.Throws<KeyNotFoundException>(() => Orchard.FromHistory(new[] { creation, fakeEvent }));
+    }
+
     [Fact]
     void
         rehydrating_an_aggregate_without_events_is_handled
@@ -310,9 +325,9 @@ public class EventSourcingAggregateRootTests
     private Result<Orchard> BindCreation()
     {
         return Orchard.Create()
-            .AddTree("maple")
-            .Then(o => o.AddTree("orange"))
-            .Then(o => o.AddTree("apple"))
+                .AddTree("maple")
+                .Then(o => o.AddTree("orange"))
+                .Then(o => o.AddTree("apple"))
             ;
     }
 

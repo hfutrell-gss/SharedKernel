@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine.Helpers;
 using Shared.Abstractions.Commands;
 using Shared.Abstractions.EventSourcing.Writing;
 using Shared.Abstractions.Kernel;
+using Shared.Abstractions.Results;
 using Shared.Kernel.TestHelpers;
 
 namespace Shared.Kernel.UnitTests;
@@ -112,19 +113,38 @@ public class ResultTests
     }
     
     [Fact]
+    public void NullForSuccessThrowsAnInvalidState()
+    {
+        Assert.Throws<InvalidResultStateException>(() => 
+            Result<Result>.Success(null)
+                .Then(r => Result<int>.Success(1)));
+    }
+     
+    [Fact]
     public void CastsBetweenUnitAndTypesOfT()
     {
         // This shouldn't compile if broken so just assert success
         var x = Result<string>.Success("1")
-            .Then(_ => Result.Success())
-            .Then(_ => Result.Success())
-            .Then(_ => Result<string>.Success("value"))
-            .Then(s => Result<string>.Success(s))
+                .Then(_ => Result.Success())
+                .Then(_ => Result.Success())
+                .Then(_ => Result<string>.Success("value"))
+                .Then(s => Result<string>.Success(s))
             ;
                 
         x.AssertSuccessful();
     }
     
+    [Fact]
+    public void MatchingOnNullThrows()
+    {
+        Assert.Throws<InvalidResultStateException>(() =>
+            Result<Result>.Success(null)
+                .Resolve(
+                    forSuccess: s => Result<string>.Success("["),
+                    forFailure: f => (Result<string>.Fail("bad bad not good"))))
+            ;
+    }
+        
     [Fact]
     public async Task CanDoAsyncMatch()
     {
@@ -177,11 +197,62 @@ public class ResultTests
     {
         await Result.Success()
                 .Resolve(
-                forSuccess: async _ => await Task.Run(() => Assert.True(true)),
-                forFailure: async _ => await Task.Run(() => Assert.Fail("bad bad not good")))
+                    forSuccess: async _ => await Task.Run(() => Assert.True(true)),
+                    forFailure: async _ => await Task.Run(() => Assert.Fail("bad bad not good")))
             ;
     }
     
+    [Fact]
+    public async Task MatchTaskThatThrowsReportsException()
+    {
+        await Result.Success()
+                .Resolve(
+                    forSuccess: async _ =>
+                    {
+                        throw new Exception("hi");
+                        await Task.Run(() => Assert.True(true));
+                    },
+                    forFailure: async f => await Task.Run(() => Assert.Equal("hi", f.Exception.Message)))
+            ;
+    }
+    
+    [Fact]
+    public async Task CannotResolveNullSuccess()
+    {
+        await Assert.ThrowsAsync<InvalidResultStateException>(async () => 
+            await Result<Result>.Success(null)
+                .Resolve(
+                    forSuccess: _ => Task.FromResult(Task.FromResult(1)),
+                    forFailure: f => Task.FromResult(Task.FromResult(2))));
+    }
+        
+    [Fact]
+    public async Task MatchTaskFromFailedDoesNotEvaluateSuccess()
+    {
+        await Result.Fail()
+                .Resolve(
+                    forSuccess: async _ =>
+                    {
+                        await Task.Run(() => Assert.True(false, "Should not succeed"));
+                    },
+                    forFailure: async f => await Task.Run(() => Assert.True(true)))
+            ;
+    }
+      
+        
+    [Fact]
+    public async Task MakingSuccessValueNullCreatesInvalidState()
+    {
+        await Assert.ThrowsAsync<InvalidResultStateException>(async () =>
+        {
+            await Result<Result>.Success(null)
+                    .Resolve(
+                        forSuccess: async _ => { await Task.Run(() => Assert.True(false, "Should not succeed")); },
+                        forFailure: async f => await Task.Run(() => Assert.True(true)))
+                ;
+        });
+    }
+ 
     [Fact]
     public async Task CanDoAsyncMapFromResultToResult()
     {
@@ -311,6 +382,24 @@ public class ResultTests
             ;
         
         Assert.Equal(4, x.ExpectSuccessAndGet());
+    }
+
+    [Fact]
+    public async Task ExceptionsInAsyncReturnFailure()
+    {
+        // This should compile in this structure
+        var x = await DoThing()
+                .Then(async s =>
+                {
+                    throw new Exception("hi");
+                    return await DoThing();
+                })
+                .Then(s => "4")
+                .Then(int.Parse)
+            ;
+
+        ;
+        Assert.Equal("hi", x.ExpectFailureAndGet().Exception.Message);
     }
 
     [Fact]
@@ -576,13 +665,13 @@ public class ResultTests
                     .Then((s, i, c, d) => $"{s} {i} {c} {d}")
             ;
         
-         var x6 = 
-                 await Result<string>.Success(expectedString)
-                     .And(_ => Task.FromResult(Result<int>.Success(1)))
-                     .And((_, _) => Task.FromResult(1))
-                     .And((_, _, _) => Task.FromResult(1))
-                     .Then((s, i, c, d) => $"{s} {i} {c} {d}")
-             ;
+        var x6 = 
+                await Result<string>.Success(expectedString)
+                    .And(_ => Task.FromResult(Result<int>.Success(1)))
+                    .And((_, _) => Task.FromResult(1))
+                    .And((_, _, _) => Task.FromResult(1))
+                    .Then((s, i, c, d) => $"{s} {i} {c} {d}")
+            ;
              
         Assert.Equal($"{expectedString} 1 1 1", x1.SuccessValue);
         Assert.Equal($"{expectedString} 1 1 1", x2.SuccessValue);

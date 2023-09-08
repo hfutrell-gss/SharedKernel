@@ -1,4 +1,4 @@
-﻿namespace Shared.Abstractions.Kernel;
+﻿namespace Shared.Abstractions.Results;
 
 /// <summary>
 /// Empty type

@@ -1,4 +1,4 @@
-﻿namespace Shared.Abstractions.Kernel;
+﻿namespace Shared.Abstractions.Results;
 
 /// <summary>
 /// A result was in an invalid state
@@ -8,7 +8,7 @@ public class InvalidResultStateException : InvalidOperationException
     /// <summary>
     /// Create an invalid result state exception
     /// </summary>
-    public InvalidResultStateException() : base("Result was in an invalid state")
+    public InvalidResultStateException() : base("Success evaluated to null. Result is in an invalid state")
     {
         
     }
@@ -166,13 +166,9 @@ public abstract record ResultBase<TSuccess>
             return;
         }
 
-        if (_success is not null)
-        {
-            onSuccess(_success);
-            return;
-        }
-    
-        throw new InvalidResultStateException();
+        if (_success is null) throw new InvalidResultStateException();
+        
+        onSuccess(_success);
     }
     
     private TResult Do<TResult>(
@@ -183,64 +179,59 @@ public abstract record ResultBase<TSuccess>
         // Check failure first in case TSuccess is a value type
         if (_failure is not null) return f(_failure);
 
-        if (_success is not null)
-        {
-            try
-            {
-                return s(_success);
-            }
-            catch(Exception ex)
-            {
-                return f(FailureDetails.From(ex));
-            }
-        }
+        if (_success is null) throw new InvalidResultStateException();
         
-        throw new InvalidResultStateException();
+        try
+        {
+            return s(_success);
+        }
+        catch(Exception ex)
+        {
+            return f(FailureDetails.From(ex));
+        }
     }
     
-    private Task DoAsync(
+    private async Task DoAsync(
         Func<TSuccess, Task> s,
         Func<FailureDetails, Task> f
     )
     {
         // Check failure first in case TSuccess is a value type
-        if (_failure is not null) return f(_failure);
-        
-        if (_success is not null)
+        if (_failure is not null)
         {
-            try
-            {
-                return s(_success);
-            }
-            catch(Exception ex)
-            {
-                return f(FailureDetails.From(ex));
-            }
+            await f(_failure).ConfigureAwait(false);
+            return;
         }
-                
-        throw new InvalidResultStateException();
+
+        if (_success is null) throw new InvalidResultStateException();
+        
+        try
+        {
+            await s(_success).ConfigureAwait(false);
+        }
+        catch(Exception ex)
+        {
+            await f(FailureDetails.From(ex)).ConfigureAwait(false);
+        }
     }
     
-    private Task<TResult> DoAsync<TResult>(
+    private async Task<TResult> DoAsync<TResult>(
         Func<TSuccess, Task<TResult>> s,
         Func<FailureDetails, Task<TResult>> f
     )
     {
         // Check failure first in case TSuccess is a value type
-        if (_failure is not null) return f(_failure);
-    
-        if (_success is not null)
+        if (_failure is not null) return await f(_failure).ConfigureAwait(false);
+
+        if (_success is null) throw new InvalidResultStateException();
+        
+        try
         {
-            try
-            {
-                return s(_success);
-            }
-            catch(Exception ex)
-            {
-                return f(FailureDetails.From(ex));
-            }
+            return await s(_success).ConfigureAwait(false);
         }
-            
-        throw new InvalidResultStateException();
+        catch(Exception ex)
+        {
+            return await f(FailureDetails.From(ex)).ConfigureAwait(false);
+        }
     }
 }

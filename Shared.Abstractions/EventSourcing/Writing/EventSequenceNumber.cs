@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Shared.Abstractions.EventSourcing.Writing;
 
 public sealed record EventSequenceNumber(long Number) : IComparable<EventSequenceNumber>
@@ -8,6 +10,7 @@ public sealed record EventSequenceNumber(long Number) : IComparable<EventSequenc
     
     public static bool operator !=(EventSequenceNumber a, int b) => !(a == b);
 
+    [ExcludeFromCodeCoverage]
     public int CompareTo(EventSequenceNumber? other)
     {
         if (ReferenceEquals(this, other)) return 0;

@@ -1,4 +1,5 @@
 ﻿using Shared.Abstractions.Kernel;
+using Shared.Abstractions.Results;
 using Xunit;
 
 namespace Shared.Kernel.TestHelpers;

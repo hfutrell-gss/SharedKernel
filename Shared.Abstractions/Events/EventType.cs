@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace Shared.Abstractions.Events;
@@ -9,10 +10,23 @@ public record EventType
 {
     [JsonProperty]
     private string Value { get; }
+    
+    private static readonly int MaxLength = 50;
+    private static readonly Regex WhiteSpace = new("\\s");
+    private static readonly Regex NonWordCharacters = new("\\W");
+
 
     [JsonConstructor]
     private EventType(string value)
     {
+        if (value is null || string.IsNullOrEmpty(value)) throw new ArgumentException("Event types must have a value");
+                
+        if (value.Length > MaxLength) throw new ArgumentException($"Event types cannot be longer than {MaxLength} characters");
+                
+        if (WhiteSpace.IsMatch(value)) throw new ArgumentException("Event types cannot contain whitespace characters");
+                
+        if (NonWordCharacters.IsMatch(value)) throw new ArgumentException("Event types cannot contain non word characters");
+                
         Value = value;
     }
 
@@ -40,7 +54,7 @@ public record EventType
     {
         var typeName = t.Name;
         if (!typeName.EndsWith("Event"))
-            throw new ArgumentException($"The type name {typeName} is invalid for an event. Event names must end with Event");
+            throw new ArgumentException($"The type name {typeName} is invalid for an event. Event type names must end with Event");
 
         return string.Join("", typeName.Substring(0, typeName.Length - 5));
     }

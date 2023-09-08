@@ -1,4 +1,5 @@
 using Shared.Abstractions.Kernel;
+using Shared.Abstractions.Results;
 
 namespace Shared.Abstractions.Commands;
 

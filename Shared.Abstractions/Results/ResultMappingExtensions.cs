@@ -1,6 +1,4 @@
-﻿using Shared.Abstractions.Kernel;
-
-namespace Shared.Abstractions.EventSourcing.Writing;
+﻿namespace Shared.Abstractions.Results;
 
 /// <summary>
 /// Extensions to add mapping functionality to results
@@ -19,9 +17,9 @@ public static class ResultMappingExtensions
         this Task<Result<TSuccess>> result,
         Func<TSuccess, Task<Result<TMapped>>> mapping)
     {
-        return await (await result).MapCoreAsync<Result<TMapped>, TMapped>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result<TMapped>, TMapped>(
             mapping,
-            f => Task.FromResult(Result<TMapped>.Fail(f)));
+            f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -35,7 +33,7 @@ public static class ResultMappingExtensions
         this Task<Result> result,
         Func<Unit, Result<TMapped>> mapping)
     {
-        return (await result).MapCore<Result<TMapped>, TMapped>(
+        return (await result.ConfigureAwait(false)).MapCore<Result<TMapped>, TMapped>(
             mapping,
             Result<TMapped>.Fail);
     }
@@ -50,9 +48,9 @@ public static class ResultMappingExtensions
         this Task<Result> result,
         Func<Unit, Task<Result>> mapping)
     {
-        return await (await result).MapCoreAsync<Result, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result, Unit>(
             mapping,
-            f => Task.FromResult(Result.Fail(f)));
+            f => Task.FromResult(Result.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -65,9 +63,9 @@ public static class ResultMappingExtensions
         this Task<Result<TSuccess>> result,
         Func<TSuccess, Task<Result>> mapping)
     {
-        return await (await result).MapCoreAsync<Result, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result, Unit>(
             mapping,
-            f => Task.FromResult(Result.Fail(f)));
+            f => Task.FromResult(Result.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -80,13 +78,14 @@ public static class ResultMappingExtensions
         this Task<Result<TSuccess>> result,
         Action<TSuccess> mapping)
     {
-        return await (await result).MapCoreAsync<Result, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result, Unit>(
             v =>
             {
                 mapping(v);
                 return Task.FromResult(Result.Success());
             },
-            f => Task.FromResult(Result.Fail(f)));
+            
+            f => Task.FromResult(Result.Fail(f))).ConfigureAwait(false);
     }
      
     /// <summary>
@@ -99,7 +98,7 @@ public static class ResultMappingExtensions
         this Task<Result> result,
         Func<Unit, Result> mapping)
     {
-        return (await result).MapCore<Result, Unit>(
+        return (await result.ConfigureAwait(false)).MapCore<Result, Unit>(
             mapping,
             Result.Fail);
     }
@@ -114,9 +113,9 @@ public static class ResultMappingExtensions
         this Task<Result> result,
         Func<Unit, Task<Result<TMapped>>> mapping)
     {
-        return await (await result).MapCoreAsync<Result<TMapped>, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result<TMapped>, Unit>(
             mapping,
-            f => Task.FromResult(Result<TMapped>.Fail(f)));
+            f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -129,9 +128,9 @@ public static class ResultMappingExtensions
         this Task<Result> result,
         Func<Task<Result<TMapped>>> mapping)
     {
-        return await (await result).MapCoreAsync<Result<TMapped>, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result<TMapped>, Unit>(
             u => mapping(),
-            f => Task.FromResult(Result<TMapped>.Fail(f)));
+            f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -144,9 +143,9 @@ public static class ResultMappingExtensions
         this Task<Result<TSuccess>> result,
         Func<TSuccess, TMapped> mapping)
     {
-        return await (await result).MapCoreAsync<Result<TMapped>, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result<TMapped>, Unit>(
             v => Task.FromResult(Result<TMapped>.Success(mapping(v))),
-            f => Task.FromResult(Result<TMapped>.Fail(f)));
+            f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -159,32 +158,36 @@ public static class ResultMappingExtensions
         this Task<Result<TSuccess>> result,
         Func<TSuccess, Result<TMapped>> mapping)
     {
-        return await (await result).MapCoreAsync<Result<TMapped>, Unit>(
+        return await (await result.ConfigureAwait(false)).MapCoreAsync<Result<TMapped>, Unit>(
             v => Task.FromResult(mapping(v)),
-            f => Task.FromResult(Result<TMapped>.Fail(f)));
+            f => Task.FromResult(Result<TMapped>.Fail(f))).ConfigureAwait(false);
     }
-     
+
     /// <summary>
     /// Map internal value to new result type
     /// </summary>
     /// <param name="result"></param>
+    /// <param name="forSuccess"></param>
+    /// <param name="forFailure"></param>
     /// <returns></returns>
     public static async Task<TMapped> Resolve<TSuccess, TMapped>(
         this Task<Result<TSuccess>> result,
         Func<TSuccess, TMapped> forSuccess,
         Func<FailureDetails, TMapped> forFailure
-        )
+    )
     {
-        return await (await result).Resolve(
+        return await (await result.ConfigureAwait(false)).Resolve(
             success => Task.FromResult(forSuccess(success)),
             failure => Task.FromResult(forFailure(failure))
-        );
+        ).ConfigureAwait(false);
     }
-     
+
     /// <summary>
     /// Map internal value to new result type
     /// </summary>
     /// <param name="result"></param>
+    /// <param name="forSuccess"></param>
+    /// <param name="forFailure"></param>
     /// <returns></returns>
     public static async Task<TMapped> Resolve<TMapped>(
         this Task<Result> result,
@@ -192,10 +195,10 @@ public static class ResultMappingExtensions
         Func<FailureDetails, TMapped> forFailure
     )
     {
-        return await (await result).Resolve(
+        return await (await result.ConfigureAwait(false)).Resolve(
             success => Task.FromResult(forSuccess(success)),
             failure => Task.FromResult(forFailure(failure))
-        );
+        ).ConfigureAwait(false);
     }
      
 }

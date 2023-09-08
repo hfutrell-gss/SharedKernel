@@ -1,6 +1,6 @@
 ﻿#pragma warning disable CS0108, CS0114
 
-namespace Shared.Abstractions.Kernel;
+namespace Shared.Abstractions.Results;
 
 /// <summary>
 /// A basic result type that reports success or invalidation reasons
