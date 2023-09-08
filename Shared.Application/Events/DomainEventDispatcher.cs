@@ -39,7 +39,7 @@ public class DomainEventDispatcher : IDomainEventDispatcher
     {
         foreach (var root in rootsWithEvents)
         {
-            var events = root.Events.ToArray();
+            var events = root.Events().ToArray();
             
             root.ClearEvents();
 

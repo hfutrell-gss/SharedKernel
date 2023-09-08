@@ -1,6 +1,7 @@
 using Shared.Abstractions.Kernel;
 using Shared.Kernel.Events;
 
+
 namespace Shared.Kernel.Entities;
 
 /// <summary>
@@ -23,7 +24,7 @@ public abstract class AggregateRoot<TId, TIdType>
     public new TId Id { get; } = null!;
 
     /// <inheritdoc/>>
-    public IReadOnlyCollection<DomainEvent> Events => _domainEventAggregator.Events;
+    public IReadOnlyCollection<DomainEvent> Events() => _domainEventAggregator.Events;
 
     /// <inheritdoc/>>
     public void ClearEvents()

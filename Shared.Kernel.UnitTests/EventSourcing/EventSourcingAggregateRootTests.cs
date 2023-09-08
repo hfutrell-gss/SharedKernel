@@ -283,7 +283,7 @@ public class EventSourcingAggregateRootTests
     private CreationEvent<OrchardId> GetBadCreateOrchardEvent()
     {
         _orchard!.DoIncorrectCreation("Bad orchard");
-        var e = _orchard.Events.Last() as CreationEvent<OrchardId>;
+        var e = _orchard.Events().Last() as CreationEvent<OrchardId>;
 
         return e!;
     }
@@ -296,7 +296,7 @@ public class EventSourcingAggregateRootTests
         _testOutputHelper.WriteLine("Orchard created");
         _testOutputHelper.WriteLine($"{name} added");
 
-        var e = _orchard.Events.Last() as CreationEvent<OrchardId>;
+        var e = _orchard.Events().Last() as CreationEvent<OrchardId>;
         if (e is null)
         {
             Assert.Fail("Creation event failed");
@@ -316,7 +316,7 @@ public class EventSourcingAggregateRootTests
             .AddTree(Guid.NewGuid().ToString())
             ;
 
-        var e = orchard.Events.Last() as TreeAddedEvent;
+        var e = orchard.Events().Last() as TreeAddedEvent;
         if (e is null)
         {
             Assert.Fail("Adding tree event failed");
