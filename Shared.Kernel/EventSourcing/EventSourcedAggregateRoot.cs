@@ -66,7 +66,7 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// <summary>
     /// Events used for event sourcing
     /// </summary>
-    public IReadOnlyCollection<ChangeEvent> EventSourcingEvents => Events
+    public IReadOnlyCollection<ChangeEvent> EventSourcingEvents => Events()
         .Select(e => e as ChangeEvent)
         .Where(e => e is not null)
         .ToList().AsReadOnly()!;
