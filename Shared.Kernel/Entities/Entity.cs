@@ -13,7 +13,7 @@ public abstract class Entity<TId>
     /// The unique Id of the entity
     /// </summary>
     [JsonProperty]
-    public TId Id { get; }
+    public TId Id { get; private set;  }
 
     /// <summary>
     /// 
