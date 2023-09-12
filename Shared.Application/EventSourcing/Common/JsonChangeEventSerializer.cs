@@ -6,7 +6,7 @@ namespace Shared.Application.EventSourcing.Common;
 /// <summary>
 /// Serialization for streaming change events
 /// </summary>
-public class JsonChangeEventSerializer : IChangeEventSerializer
+internal class JsonChangeEventSerializer : IChangeEventSerializer
 {
     /// <summary>
     /// Serialize events into storable payloads

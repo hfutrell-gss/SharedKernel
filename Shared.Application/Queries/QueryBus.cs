@@ -3,7 +3,7 @@ using Shared.Abstractions.Queries;
 
 namespace Shared.Application.Queries;
 
-public class QueryBus : IQueryBus
+internal sealed class QueryBus : IQueryBus
 {
     private readonly IMediator _mediator;
 

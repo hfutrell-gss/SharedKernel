@@ -5,7 +5,7 @@ using Shared.Application.EventSourcing.Reading;
 
 namespace Shared.Application.EventSourcing.Writing;
 
-public sealed class AggregateEventStreamWriter : IAggregateEventStreamWriter
+internal sealed class AggregateEventStreamWriter : IAggregateEventStreamWriter
 {
     private readonly IEventStore _eventStore;
     private readonly IChangeEventSerializer _serializer;

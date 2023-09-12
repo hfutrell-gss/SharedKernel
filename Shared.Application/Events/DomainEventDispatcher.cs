@@ -7,7 +7,7 @@ namespace Shared.Application.Events;
 /// Generally used to dispatch events stored on an
 /// aggregate after changes have been made.
 /// </summary>
-public class DomainEventDispatcher : IDomainEventDispatcher
+internal class DomainEventDispatcher : IDomainEventDispatcher
 {
     private readonly IEventBus _eventBus;
 

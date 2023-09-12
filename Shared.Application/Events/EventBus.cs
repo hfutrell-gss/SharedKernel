@@ -7,7 +7,7 @@ namespace Shared.Application.Events;
 /// <summary>
 /// A concrete event bus that sends events
 /// </summary>
-public class EventBus : IEventBus
+internal class EventBus : IEventBus
 {
     private readonly IMediator _mediator;
 

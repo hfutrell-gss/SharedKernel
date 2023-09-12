@@ -7,7 +7,7 @@ namespace Shared.Application.Commands;
 /// <summary>
 /// Concrete command bus for delivering commands
 /// </summary>
-public class CommandBus : ICommandBus
+internal class CommandBus : ICommandBus
 {
     private readonly IMediator _mediator;
 
