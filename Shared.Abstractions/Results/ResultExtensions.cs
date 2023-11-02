@@ -23,6 +23,7 @@ public static class ResultExtensions
             mapping,
             Result<TAppend>.Fail);
     
+        if (nextResult.Failed) return Result<(T1, TAppend)>.Fail(nextResult.FailureDetails);
              
         return Result<(T1, TAppend)>.Success((result.SuccessValue, nextResult.SuccessValue));
     }
@@ -71,7 +72,7 @@ public static class ResultExtensions
         try
         {
             var nextResult = await mapping(awaitedResult.SuccessValue).ConfigureAwait(false);
-        
+            
             return Result<(T1, TAppend)>.Success((
                     awaitedResult.SuccessValue,
                     nextResult)

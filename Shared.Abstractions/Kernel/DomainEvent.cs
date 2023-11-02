@@ -21,10 +21,10 @@ public abstract record DomainEvent : IDomainEvent
     /// <summary>
     /// The unique id of the event
     /// </summary>
-    public virtual Guid EventId { get; } = Guid.NewGuid();
+    public Guid EventId { get; private set; } = Guid.NewGuid();
     
     /// <summary>
     /// When the event occured
     /// </summary>
-    public DateTime WhenEventOccurred { get; } = DateTime.UtcNow;
+    public DateTime WhenEventOccurred { get; private set; } = DateTime.UtcNow;
 }

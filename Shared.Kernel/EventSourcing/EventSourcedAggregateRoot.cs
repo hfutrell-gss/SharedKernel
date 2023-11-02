@@ -177,6 +177,11 @@ public abstract class EventSourcedAggregateRoot<TRoot, TId> : AggregateRoot<TId,
     /// <typeparam name="TChangeEvent">The <see cref="Type"/> of the <see cref="ChangeEvent"/></typeparam>
     protected Result<TRoot> TryDoChange<TChangeEvent>(TChangeEvent @event) where TChangeEvent : ChangeEvent
     {
+        if (_currentEventSequenceNumber.Number > 1 && @event is CreationEvent<TId>)
+        {
+            return Fail("Multiple creation events registered");
+        }
+        
         return ApplyChange(@event).Resolve(
             forSuccess: root =>
             {

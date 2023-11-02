@@ -383,7 +383,7 @@ public class ResultTests
     [Fact]
     public void ImplicitlyCastsToTask()
     {
-        Task<Result> result = Result.Success();
+        Task<Result> _ = Result.Success();
             
         Assert.True(true);
     }
@@ -391,7 +391,7 @@ public class ResultTests
     [Fact]
     public void ImplicitlyCastsResultOfTToTask()
     {
-        Task<Result<string>> result = Result<string>.Success("k");
+        Task<Result<string>> _ = Result<string>.Success("k");
             
         Assert.True(true);
     }
