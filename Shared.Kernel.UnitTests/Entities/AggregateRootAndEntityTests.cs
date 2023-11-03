@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Events;
 using Shared.Application.Extensions;
@@ -113,7 +114,7 @@ public class AggregateRootAndEntityTests
     public AggregateRootAndEntityTests()
     {
         _services = new ServiceCollection()
-                .AddMediatR(c => c.RegisterServicesFromAssembly(typeof(WordUpdatedEventHandler).Assembly))
+                .AddMediatR(typeof(WordUpdatedEventHandler).Assembly)
                 .AddDomainEvents()
                 .AddScoped<WordListener>()
                 .AddScoped<NumberListener>()

@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Commands;
 using Shared.Abstractions.Results;
@@ -14,7 +15,7 @@ public class CommandTests
     public CommandTests()
     {
         var serviceProvider = new ServiceCollection()
-                .AddMediatR(c => c.RegisterServicesFromAssembly(typeof(AddValueCommand).Assembly))
+                .AddMediatR(typeof(AddValueCommand).Assembly)
                 .AddCqrs()
                 .BuildServiceProvider()
             ;

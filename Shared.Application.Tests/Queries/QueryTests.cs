@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Queries;
 using Shared.Application.Tests.Queries.TestApplication;
@@ -7,13 +8,13 @@ namespace Shared.Application.Tests.Queries;
 
 public class QueryTests
 {
-    private readonly ServiceProvider _serviceProvider;
+    private readonly IServiceProvider _serviceProvider;
     private const int GoodResult = 1;
 
     public QueryTests()
     {
         _serviceProvider = new ServiceCollection()
-                .AddMediatR(c => c.RegisterServicesFromAssembly(typeof(ThingQueryHandler).Assembly))
+                .AddMediatR(typeof(ThingQuery).Assembly)
                 .AddCqrs()
                 .AddSingleton<ThingStore>()
                 .BuildServiceProvider()
