@@ -25,13 +25,16 @@ public record FailureDetails
 
     public static FailureDetails From(Exception exception)
     {
-        var reasons = new [] { exception.Message, exception.InnerException?.Message ?? "No inner exception" };
+        var reasons = new string[] {};
         
-        return new FailureDetails(exception, reasons);
+        return From(exception, reasons);
     }
     
     public static FailureDetails From(Exception exception, params string[] reasons)
     {
-        return new FailureDetails(exception, reasons);
+        var reasonsList = reasons.ToList();
+        reasonsList.AddRange(new [] { exception.Message, exception.InnerException?.Message ?? "No inner exception" });
+        
+        return new FailureDetails(exception, reasonsList.ToArray());
     }
 }

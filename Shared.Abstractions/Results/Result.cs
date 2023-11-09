@@ -28,19 +28,35 @@ public sealed record Result : Result<Unit>
     /// <returns></returns>
     public static Result Fail(params string[] failureDetails) => new(FailureDetails.From(failureDetails));
     
-    /// <summary>
-    /// Create failure from details
-    /// </summary>
-    /// <param name="details"></param>
-    /// <returns></returns>
-    public static Result Fail(FailureDetails details) => new(details);
-    
-    /// <summary>
-    /// Without an operation it is safe to implicitly cast
-    /// this for readability
-    /// </summary>
-    /// <returns></returns>
-    public static implicit operator Task<Result>(Result result) => Task.FromResult(result);
+     /// <summary>
+     /// Create failure from exception
+     /// </summary>
+     /// <param name="ex"></param>
+     /// <returns></returns>
+     public static Result Fail(Exception ex) => new(FailureDetails.From(ex));
+
+     /// <summary>
+     /// Create failure from exception with a message
+     /// </summary>
+     /// <param name="message"></param>
+     /// <param name="ex"></param>
+     /// <returns></returns>
+     public static Result Fail(string message, Exception ex) => new(FailureDetails.From(ex, message));
+      
+     /// <summary>
+     /// Create failure from details
+     /// </summary>
+     /// <param name="details"></param>
+     /// <returns></returns>
+     public static Result Fail(FailureDetails details) => new(details);
+ 
+     
+     /// <summary>
+     /// Without an operation it is safe to implicitly cast
+     /// this for readability
+     /// </summary>
+     /// <returns></returns>
+     public static implicit operator Task<Result>(Result result) => Task.FromResult(result);
 }
 
 /// <summary>
@@ -85,6 +101,14 @@ public record Result<TResult> : ResultBase<TResult>
     /// <param name="ex"></param>
     /// <returns></returns>
     public static Result<TResult> Fail(Exception ex) => new(FailureDetails.From(ex));
+
+    /// <summary>
+    /// Create failure from exception with a message
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="ex"></param>
+    /// <returns></returns>
+    public static Result<TResult> Fail(string message, Exception ex) => new(FailureDetails.From(ex, message));
 
     /// <summary>
     /// Create failure from details

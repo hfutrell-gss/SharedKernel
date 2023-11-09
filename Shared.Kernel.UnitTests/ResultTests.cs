@@ -32,6 +32,25 @@ public class ResultTests
     }
     
     [Fact]
+    public void PassesFailureWithException()
+    {
+        var x = Result.Fail(new Exception("No bueno"));
+                    
+        x.AssertFailure();
+        Assert.Contains("No bueno", x.ExpectFailureAndGet().FailureReasons);
+    }
+     
+    [Fact]
+    public void PassesFailureWithMessageAndException()
+    {
+        var x = Result.Fail("some", new Exception("No bueno"));
+                
+        x.AssertFailure();
+        Assert.Contains("some", x.ExpectFailureAndGet().FailureReasons);
+        Assert.Contains("No bueno", x.ExpectFailureAndGet().FailureReasons);
+    }
+     
+    [Fact]
     public void CanResultTypes()
     {
         var x = Result<int>.Success(1)
