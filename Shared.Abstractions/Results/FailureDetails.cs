@@ -5,6 +5,8 @@ public record FailureDetails
     private readonly string[] _failureReasons;
 
     public IReadOnlyCollection<string> FailureReasons => _failureReasons;
+
+    public string GetMessage(string joinDelimiter = ". ") => string.Join(joinDelimiter, _failureReasons);
     
     public Exception? Exception { get; }
      

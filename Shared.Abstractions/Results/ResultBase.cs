@@ -38,14 +38,14 @@ public abstract record ResultBase<TSuccess>
     /// </summary>
     /// <exception cref="InvalidOperationException">If retrieving success value on a failed operation</exception>
     public TSuccess SuccessValue =>
-        _success ?? throw new InvalidOperationException("Tried to get success value on a failed operation");
+        _success ?? throw new InvalidOperationException("Tried to get success value on a failed operation. Failure reason was {FailureDetails.GetMessage()}", FailureDetails.Exception);
     
     /// <summary>
     /// Get the failure details if failed
     /// </summary>
     /// <exception cref="InvalidOperationException">If retrieving failure value on a successful operation</exception>
     public FailureDetails FailureDetails => 
-        _failure ?? throw new InvalidOperationException("Tried to get failure value on successful operation");
+        _failure ?? throw new InvalidOperationException($"Tried to get failure value on successful operation");
     
     /// <summary>
     /// Internal success constructor
