@@ -38,7 +38,7 @@ public abstract record ResultBase<TSuccess>
     /// </summary>
     /// <exception cref="InvalidOperationException">If retrieving success value on a failed operation</exception>
     public TSuccess SuccessValue =>
-        _success ?? throw new InvalidOperationException("Tried to get success value on a failed operation. Failure reason was {FailureDetails.GetMessage()}", FailureDetails.Exception);
+        _success ?? throw new InvalidOperationException($"Tried to get success value on a failed operation. Failure reason was {FailureDetails.GetMessage()}", FailureDetails.Exception);
     
     /// <summary>
     /// Get the failure details if failed
